@@ -13,6 +13,10 @@ export default function ReviewVault() {
   const [pitchTitle, setPitchTitle] = useState('');
   const [pitchCategory, setPitchCategory] = useState<'game' | 'comic' | 'movie'>('game');
   const [pitchText, setPitchText] = useState('');
+  const [pitchName, setPitchName] = useState('');
+  const [pitchEmail, setPitchEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formspreeStatus, setFormspreeStatus] = useState<'success' | 'error' | null>(null);
   const [pitchResponse, setPitchResponse] = useState<{ status: 'accepted' | 'rejected' | 'incinerated' | null, message: string }>({ status: null, message: '' });
 
   const filteredArticles = useMemo(() => {
@@ -26,9 +30,12 @@ export default function ReviewVault() {
   }, [selectedCategory, searchQuery]);
 
   // Doom's automatic comical response system for submitted pitches
-  const handlePitchSubmit = (e: FormEvent) => {
+  const handlePitchSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!pitchTitle.trim() || !pitchText.trim()) return;
+    if (!pitchTitle.trim() || !pitchText.trim() || !pitchName.trim() || !pitchEmail.trim()) return;
+
+    setIsSubmitting(true);
+    setFormspreeStatus(null);
 
     const lowerText = pitchText.toLowerCase();
     const lowerTitle = pitchTitle.toLowerCase();
@@ -48,6 +55,54 @@ export default function ReviewVault() {
     }
 
     setPitchResponse({ status, message });
+
+    const formspreeFormId = (import.meta as any).env.VITE_FORMSPREE_FORM_ID;
+    const formspreeUrl = formspreeFormId
+      ? (formspreeFormId.startsWith('http') ? formspreeFormId : `https://formspree.io/f/${formspreeFormId}`)
+      : '';
+
+    if (formspreeUrl) {
+      try {
+        const response = await fetch(formspreeUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            name: pitchName,
+            email: pitchEmail,
+            title: pitchTitle,
+            category: pitchCategory,
+            manuscript: pitchText,
+            doom_verdict: status.toUpperCase(),
+            doom_response: message,
+          }),
+        });
+
+        if (response.ok) {
+          setFormspreeStatus('success');
+          setPitchTitle('');
+          setPitchText('');
+          setPitchName('');
+          setPitchEmail('');
+        } else {
+          setFormspreeStatus('error');
+        }
+      } catch (err) {
+        console.error('Error submitting to Formspree:', err);
+        setFormspreeStatus('error');
+      }
+    } else {
+      // Offline / Simulation mode
+      setFormspreeStatus('success');
+      setPitchTitle('');
+      setPitchText('');
+      setPitchName('');
+      setPitchEmail('');
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -207,6 +262,33 @@ export default function ReviewVault() {
             <div className="lg:col-span-7 bg-stone-900 border-2 border-black p-5 shadow-comic relative">
               <form onSubmit={handlePitchSubmit} className="space-y-4">
                 
+                {/* Contact Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase mb-1">COURIER NAME / AGENT CODE</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Agent Doom-77"
+                      value={pitchName}
+                      onChange={(e) => setPitchName(e.target.value)}
+                      className="w-full bg-stone-950 text-white font-mono text-xs border border-stone-800 px-3 py-2 uppercase placeholder:text-stone-600 focus:outline-hidden focus:border-emerald-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase mb-1">COURIER EMAIL ADDRESS</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. agent@latveria.gov"
+                      value={pitchEmail}
+                      onChange={(e) => setPitchEmail(e.target.value)}
+                      className="w-full bg-stone-950 text-white font-mono text-xs border border-stone-800 px-3 py-2 placeholder:text-stone-600 focus:outline-hidden focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase mb-1">PROPOSAL TITLE</label>
@@ -246,17 +328,73 @@ export default function ReviewVault() {
                   />
                 </div>
 
+                {/* Formspree connection badge/indicator */}
+                <div className="text-[9px] font-mono border p-2 bg-stone-950 border-stone-800 flex flex-col gap-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-stone-400 font-bold uppercase">UPLINK REGISTRY</span>
+                    {(import.meta as any).env.VITE_FORMSPREE_FORM_ID ? (
+                      <span className="text-emerald-500 font-bold">● ACTIVE (LIVE FORMSPREE UPLINK)</span>
+                    ) : (
+                      <span className="text-yellow-500 font-bold">○ SIMULATED (OFFLINE TEST MODE)</span>
+                    )}
+                  </div>
+                  {!(import.meta as any).env.VITE_FORMSPREE_FORM_ID && (
+                    <p className="text-stone-500 leading-tight">
+                      To receive pitches in your real email inbox, add <code className="text-emerald-400 font-mono">VITE_FORMSPREE_FORM_ID</code> (your Formspree form ID or endpoint URL) into the project environment settings.
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-mono text-[9px] text-emerald-500 font-bold uppercase tracking-wider">DOOMBOT REVIEW PROTOCOL 77-A</span>
                   <button
                     type="submit"
-                    className="bg-red-600 hover:bg-red-500 text-white font-comic text-lg uppercase px-6 py-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+                    disabled={isSubmitting}
+                    className="bg-red-600 hover:bg-red-500 disabled:bg-stone-800 text-white font-comic text-lg uppercase px-6 py-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed"
                   >
-                    SUBMIT MANUSCRIPT →
+                    {isSubmitting ? 'TRANSMITTING...' : 'SUBMIT MANUSCRIPT →'}
                   </button>
                 </div>
 
               </form>
+
+              {/* Submission status feedback (Formspree) */}
+              <AnimatePresence>
+                {formspreeStatus && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className={`mt-4 border-2 border-black p-4 text-xs font-mono relative ${
+                      formspreeStatus === 'success'
+                        ? 'bg-emerald-950 text-emerald-400 border-emerald-500'
+                        : 'bg-red-950 text-red-400 border-red-500'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center space-x-1.5 mb-1 text-[11px]">
+                      {formspreeStatus === 'success' ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-400" />
+                          <span>SECURE TRANSMISSION SUCCESSFUL</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-4 h-4 text-red-500" />
+                          <span>TRANSMISSION FAILED</span>
+                        </>
+                      )}
+                    </div>
+                    <p>
+                      {formspreeStatus === 'success'
+                        ? ((import.meta as any).env.VITE_FORMSPREE_FORM_ID 
+                          ? "Uplink verified. Your analytical scroll has bypassed defense walls and has been securely routed to the state mailbox!"
+                          : "Simulated submission successful! Once you add VITE_FORMSPREE_FORM_ID in settings, this submission will route directly to your email inbox.")
+                        : "State scramblers detected interference during transmission. Verify your VITE_FORMSPREE_FORM_ID settings and try again."
+                      }
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Dynamic comical pitch responses */}
               <AnimatePresence>
