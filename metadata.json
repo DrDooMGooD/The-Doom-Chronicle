@@ -1,0 +1,6 @@
+{
+  "name": "The Doom Chronicle",
+  "description": "The Sovereign review and article ledger of video games, comic books, and films, personally written by Dom Pineda under the iron gaze of Dr. Doom. Designed with a high-impact comic book aesthetic using the Latverian colors of black, green, and red.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

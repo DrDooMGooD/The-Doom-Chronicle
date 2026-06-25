@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-comic: "Bangers", cursive, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-stone-950 text-stone-100 overflow-x-hidden selection:bg-rose-600 selection:text-white;
+  }
+}
+
+/* Comic Halftone dots background overlay */
+.halftone-bg {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.4) 15%, transparent 16%);
+  background-size: 8px 8px;
+}
+
+.halftone-green {
+  background-image: radial-gradient(rgba(4, 120, 87, 0.2) 15%, transparent 16%);
+  background-size: 8px 8px;
+}
+
+.halftone-red {
+  background-image: radial-gradient(rgba(220, 38, 38, 0.2) 15%, transparent 16%);
+  background-size: 6px 6px;
+}
+
+/* Comic shadow utility */
+.shadow-comic {
+  box-shadow: 6px 6px 0px 0px #000000;
+}
+
+.shadow-comic-lg {
+  box-shadow: 10px 10px 0px 0px #000000;
+}
+
+.shadow-comic-red {
+  box-shadow: 6px 6px 0px 0px #dc2626;
+}
+
+.shadow-comic-green {
+  box-shadow: 6px 6px 0px 0px #047857;
+}
+
+/* Comic Speech bubble tail */
+.speech-bubble-tail {
+  position: absolute;
+  bottom: -12px;
+  left: 30px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid #ffffff;
+}
+
+.speech-bubble-tail-border {
+  position: absolute;
+  bottom: -15px;
+  left: 29px;
+  width: 0;
+  height: 0;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 13px solid #000000;
+}
+
+/* Comic skew lines for panel separators */
+.skew-comic-r {
+  transform: skewY(-1.5deg);
+}
+
+.skew-comic-l {
+  transform: skewY(1.5deg);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #047857; /* Latverian Green */
+  border: 2px solid #000000;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #dc2626; /* Latverian Red */
+}
+
+/* Comic Ben-Day dot filter animation */
+@keyframes pulse-halftone {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
+}
+
+.animate-halftone {
+  animation: pulse-halftone 3s ease-in-out infinite;
+}
