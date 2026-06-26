@@ -83,7 +83,7 @@ export default function LatverianGuestbook() {
         
         {/* Title Grid */}
         <div className="relative mb-12 bg-black border-4 border-black p-6 shadow-comic-red text-center skew-comic-r">
-          <span className="absolute -top-4 right-6 bg-emerald-700 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[3deg] shadow-comic">
+          <span className="absolute -top-4 right-6 bg-emerald-700 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[3deg] shadow-comic tracking-wide">
             STATE CENSUS OFFICE
           </span>
           <h2 className="font-comic text-5xl text-white uppercase tracking-wider">

@@ -55,34 +55,34 @@ export default function Hero({ onExploreClick }: HeroProps) {
 
           <div>
             {/* Super Comic Title */}
-            <div className="relative pt-14 sm:pt-16">
-              <span className="absolute top-0 sm:top-1 -left-2 font-comic text-2xl text-red-600 bg-black px-2 py-0.5 border border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider">
+            <div className="relative pt-16 sm:pt-20">
+              <span className="absolute -top-1 sm:-top-2 -left-2 font-comic text-2xl text-red-600 bg-black px-2.5 py-1 border-2 border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider select-none">
                 BY IMPERIAL DICTATE!
               </span>
-              <h1 className="font-comic text-6xl sm:text-7xl lg:text-8xl tracking-normal leading-none text-white uppercase select-none drop-shadow-[6px_6px_0px_rgba(0,0,0,1)]">
+              <h1 className="font-comic text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none text-white uppercase select-none drop-shadow-[6px_6px_0px_rgba(0,0,0,1)]">
                 THE DOOM <br />
-                <span className="text-emerald-400 block">CHRONICLE</span>
+                <span className="text-emerald-400 block tracking-wide">CHRONICLE</span>
               </h1>
             </div>
 
             {/* Subcategories with Comic sound design vibes */}
-            <div className="mt-6 flex flex-wrap gap-2 text-xs font-mono font-bold uppercase">
-              <span className="bg-red-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+            <div className="mt-8 flex flex-wrap gap-2.5 text-xs font-mono font-bold uppercase">
+              <span className="bg-red-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
                 🎮 VIDEO GAMES
               </span>
-              <span className="bg-emerald-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+              <span className="bg-emerald-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
                 📚 COMIC BOOKS
               </span>
-              <span className="bg-stone-800 text-stone-200 px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+              <span className="bg-stone-800 text-stone-200 px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
                 🎬 CINEMATIC ART
               </span>
             </div>
 
             {/* Description Editorial */}
-            <p className="mt-6 text-stone-300 font-sans text-sm sm:text-base leading-relaxed border-l-4 border-emerald-500 pl-4">
-              Welcome, mortal traveler, to the sovereign chronicle of games, sequential art, and cinematic projects, written by state-appointed chronicler <strong className="text-red-500">Dom Pineda</strong>. 
+            <p className="mt-6 text-stone-200 font-sans text-sm sm:text-base leading-relaxed border-l-4 border-emerald-500 pl-4 font-medium">
+              Welcome, mortal traveler, to the sovereign chronicle of games, sequential art, and cinematic projects, written by state-appointed chronicler <strong className="text-red-500 font-bold">Dom Pineda</strong>. 
               While lesser review aggregates rely on the chaotic consensus of uninformed peasants, this ledger is curated 
-              under the flawless judgment of <strong className="text-emerald-500">Lord Victor von Doom</strong>. Every score is absolute. Every critique is final.
+              under the flawless judgment of <strong className="text-emerald-400 font-bold">Lord Victor von Doom</strong>. Every score is absolute. Every critique is final.
             </p>
           </div>
 

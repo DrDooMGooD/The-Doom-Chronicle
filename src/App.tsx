@@ -4,11 +4,20 @@ import Hero from './components/Hero';
 import ReviewVault from './components/ReviewVault';
 import DoomCounsel from './components/DoomCounsel';
 import LatverianGuestbook from './components/LatverianGuestbook';
-import { Shield, ArrowUp, Skull, Heart } from 'lucide-react';
+import DoomIntro from './components/DoomIntro';
+import { Shield, ArrowUp, Skull, Eye } from 'lucide-react';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('hero');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => {
+    // Check if the user has already viewed the intro in this session
+    try {
+      return !sessionStorage.getItem('doom-intro-seen');
+    } catch {
+      return true;
+    }
+  });
 
   // Monitor scroll height to display "scroll to top" button and active nav section
   useEffect(() => {
@@ -42,6 +51,26 @@ export default function App() {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
+
+  const handleIntroComplete = () => {
+    try {
+      sessionStorage.setItem('doom-intro-seen', 'true');
+    } catch (e) {
+      // Fallback if sessionStorage is blocked
+    }
+    setShowIntro(false);
+  };
+
+  const handleReplayIntro = () => {
+    try {
+      sessionStorage.removeItem('doom-intro-seen');
+    } catch (e) {}
+    setShowIntro(true);
+  };
+
+  if (showIntro) {
+    return <DoomIntro onComplete={handleIntroComplete} />;
+  }
 
   return (
     <div className="relative min-h-screen bg-stone-950 text-stone-100 overflow-x-hidden selection:bg-rose-600 selection:text-white">
@@ -131,6 +160,15 @@ export default function App() {
                     className="hover:text-emerald-400 transition-colors cursor-pointer"
                   >
                     🖊️ Sovereign Registry
+                  </button>
+                </li>
+                <li className="border-t border-stone-800 pt-2 mt-2">
+                  <button
+                    onClick={handleReplayIntro}
+                    className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer flex items-center space-x-1 text-[11px]"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>🎬 REPLAY STATE CINEMATIC</span>
                   </button>
                 </li>
               </ul>

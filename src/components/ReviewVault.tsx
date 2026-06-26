@@ -111,7 +111,7 @@ export default function ReviewVault() {
         
         {/* Title Panel styled like an authentic comic header block */}
         <div className="relative mb-12 bg-black border-4 border-black p-6 shadow-comic-green text-center skew-comic-r">
-          <div className="absolute -top-4 -right-3 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-1 rotate-[5deg] shadow-comic">
+          <div className="absolute -top-4 -right-3 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-1 rotate-[5deg] shadow-comic tracking-wide">
             DOOM'S VERDICT IS LAW!
           </div>
           <h2 className="font-comic text-5xl sm:text-6xl text-white tracking-wider uppercase">
@@ -199,7 +199,7 @@ export default function ReviewVault() {
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter contrast-125"
                       />
-                      <div className="absolute bottom-2 left-2 bg-black border border-white px-2 py-1 flex items-center space-x-1 font-comic text-yellow-400 text-sm">
+                      <div className="absolute bottom-2 left-2 bg-black border border-white px-2 py-1 flex items-center space-x-1 font-comic text-yellow-400 text-sm tracking-wide">
                         <Shield className="w-3.5 h-3.5 fill-current" />
                         <span>DOOM RATIO: {article.doomRating}/5</span>
                       </div>
@@ -226,7 +226,7 @@ export default function ReviewVault() {
                     <span className="font-mono text-[10px] text-stone-500 font-bold uppercase">{article.readTime}</span>
                     <button
                       onClick={() => setSelectedArticle(article)}
-                      className="bg-emerald-800 group-hover:bg-rose-600 text-white font-comic text-sm uppercase py-1.5 px-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
+                      className="bg-emerald-800 group-hover:bg-rose-600 text-white font-comic text-sm uppercase py-1.5 px-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer tracking-wider"
                     >
                       READ DECREE →
                     </button>
@@ -350,7 +350,7 @@ export default function ReviewVault() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="bg-red-600 hover:bg-red-500 disabled:bg-stone-800 text-white font-comic text-lg uppercase px-6 py-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed"
+                    className="bg-red-600 hover:bg-red-500 disabled:bg-stone-800 text-white font-comic text-lg uppercase px-6 py-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed tracking-wide"
                   >
                     {isSubmitting ? 'TRANSMITTING...' : 'SUBMIT MANUSCRIPT →'}
                   </button>
@@ -486,9 +486,9 @@ export default function ReviewVault() {
                 </div>
 
                 {/* Article Prose Body */}
-                <div className="prose prose-invert max-w-none text-stone-300 text-sm sm:text-base leading-relaxed space-y-4 font-sans">
+                <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-4 font-sans font-medium">
                   {selectedArticle.content.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx}>{paragraph}</p>
+                    <p key={idx} className="mb-4">{paragraph}</p>
                   ))}
                 </div>
 
@@ -497,7 +497,7 @@ export default function ReviewVault() {
                   <div className="absolute inset-0 halftone-green opacity-20 pointer-events-none" />
                   
                   <div className="relative z-10">
-                    <div className="flex items-center space-x-2 text-emerald-400 font-comic text-xl uppercase mb-3">
+                    <div className="flex items-center space-x-2 text-emerald-400 font-comic text-xl uppercase mb-3 tracking-wide">
                       <Star className="w-5 h-5 text-yellow-400 fill-current" />
                       <span>THE SOVEREIGN EDICT</span>
                     </div>
@@ -528,7 +528,7 @@ export default function ReviewVault() {
                             />
                           );
                         })}
-                        <span className="font-comic text-lg text-white ml-2">({selectedArticle.doomRating} / 5)</span>
+                        <span className="font-comic text-lg text-white ml-2 tracking-wide">({selectedArticle.doomRating} / 5)</span>
                       </div>
 
                     </div>

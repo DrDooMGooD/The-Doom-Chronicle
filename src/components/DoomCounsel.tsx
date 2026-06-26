@@ -55,7 +55,7 @@ export default function DoomCounsel() {
         
         {/* Section Header */}
         <div className="relative mb-12 bg-black border-4 border-black p-6 shadow-comic text-center skew-comic-l">
-          <span className="absolute -top-4 left-6 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[-3deg] shadow-comic">
+          <span className="absolute -top-4 left-6 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[-3deg] shadow-comic tracking-wide">
             STATE ADVISORY DECK
           </span>
           <h2 className="font-comic text-5xl text-white uppercase tracking-wider">
