@@ -55,8 +55,8 @@ export default function Hero({ onExploreClick }: HeroProps) {
 
           <div>
             {/* Super Comic Title */}
-            <div className="relative">
-              <span className="absolute -top-6 -left-3 font-comic text-2xl text-red-600 bg-black px-2 py-0.5 border border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider">
+            <div className="relative pt-8 sm:pt-10">
+              <span className="absolute -top-4 sm:-top-6 -left-2 font-comic text-2xl text-red-600 bg-black px-2 py-0.5 border border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider">
                 BY IMPERIAL DICTATE!
               </span>
               <h1 className="font-comic text-6xl sm:text-7xl lg:text-8xl tracking-tight leading-none text-white uppercase select-none drop-shadow-[4px_4px_0px_#10b981]">
