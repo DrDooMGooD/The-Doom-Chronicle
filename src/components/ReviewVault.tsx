@@ -1,6 +1,6 @@
 import { useState, useMemo, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star } from 'lucide-react';
+import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings } from 'lucide-react';
 import { articles } from '../data';
 import { Article } from '../types';
 
@@ -18,6 +18,29 @@ export default function ReviewVault() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formspreeStatus, setFormspreeStatus] = useState<'success' | 'error' | null>(null);
   const [pitchResponse, setPitchResponse] = useState<{ status: 'accepted' | 'rejected' | 'incinerated' | null, message: string }>({ status: null, message: '' });
+
+  // Custom local Formspree state for user convenience
+  const [localFormspreeId, setLocalFormspreeId] = useState<string>(() => {
+    try {
+      return (import.meta as any).env.VITE_FORMSPREE_FORM_ID || localStorage.getItem('doom-formspree-id') || '';
+    } catch {
+      return (import.meta as any).env.VITE_FORMSPREE_FORM_ID || '';
+    }
+  });
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [showUplinkRegistry, setShowUplinkRegistry] = useState(() => {
+    try {
+      const isDev = (import.meta as any).env.DEV;
+      const hasParam = window.location.search.includes('admin=true') || 
+                       window.location.search.includes('dev=true') || 
+                       window.location.search.includes('config=true') || 
+                       window.location.search.includes('formspree=true');
+      const saved = localStorage.getItem('doom-show-uplink') === 'true';
+      return !!(isDev || hasParam || saved);
+    } catch {
+      return false;
+    }
+  });
 
   const filteredArticles = useMemo(() => {
     return articles.filter((art) => {
@@ -56,7 +79,7 @@ export default function ReviewVault() {
 
     setPitchResponse({ status, message });
 
-    const formspreeFormId = (import.meta as any).env.VITE_FORMSPREE_FORM_ID;
+    const formspreeFormId = localFormspreeId || (import.meta as any).env.VITE_FORMSPREE_FORM_ID;
     const formspreeUrl = formspreeFormId
       ? (formspreeFormId.startsWith('http') ? formspreeFormId : `https://formspree.io/f/${formspreeFormId}`)
       : '';
@@ -329,24 +352,91 @@ export default function ReviewVault() {
                 </div>
 
                 {/* Formspree connection badge/indicator */}
-                <div className="text-[9px] font-mono border p-2 bg-stone-950 border-stone-800 flex flex-col gap-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-stone-400 font-bold uppercase">UPLINK REGISTRY</span>
-                    {(import.meta as any).env.VITE_FORMSPREE_FORM_ID ? (
-                      <span className="text-emerald-500 font-bold">● ACTIVE (LIVE FORMSPREE UPLINK)</span>
-                    ) : (
-                      <span className="text-yellow-500 font-bold">○ SIMULATED (OFFLINE TEST MODE)</span>
-                    )}
+                {showUplinkRegistry && (
+                  <div className="text-[9px] font-mono border p-2 bg-stone-950 border-stone-800 flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-stone-400 font-bold uppercase">UPLINK REGISTRY</span>
+                      {localFormspreeId || (import.meta as any).env.VITE_FORMSPREE_FORM_ID ? (
+                        <span className="text-emerald-500 font-bold flex items-center space-x-1">
+                          <span>● ACTIVE</span>
+                          <span className="text-[8px] text-stone-500">({localFormspreeId ? 'LOCAL CONFIG' : 'LIVE UPLINK'})</span>
+                        </span>
+                      ) : (
+                        <span className="text-yellow-500 font-bold">○ SIMULATED (OFFLINE TEST MODE)</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col gap-1 text-stone-500 leading-tight">
+                      <p>
+                        To receive pitches in your real email inbox, click the <button type="button" onClick={() => setShowConfigPanel(!showConfigPanel)} className="text-emerald-400 font-bold underline hover:text-emerald-300">configure button</button> below to paste your Formspree ID, or configure <code className="text-emerald-400 font-mono">VITE_FORMSPREE_FORM_ID</code> in environment settings.
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowConfigPanel(!showConfigPanel)}
+                        className="flex items-center space-x-1 self-start text-[8px] text-stone-400 hover:text-white uppercase font-bold border border-stone-800 bg-stone-900 px-1.5 py-0.5 mt-0.5 transition-colors"
+                      >
+                        <Settings className="w-2.5 h-2.5" />
+                        <span>{showConfigPanel ? 'Hide Config' : 'Configure Formspree Inline'}</span>
+                      </button>
+
+                      {showConfigPanel && (
+                        <div className="mt-1.5 p-2 bg-stone-900 border border-stone-800 text-stone-300 space-y-1.5">
+                          <span className="block text-[8px] uppercase font-bold text-stone-400">ENTER FORMSPREE FORM ID OR FULL ENDPOINT:</span>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="e.g. xbjnqywd"
+                              value={localFormspreeId}
+                              onChange={(e) => {
+                                const val = e.target.value.trim();
+                                setLocalFormspreeId(val);
+                                try {
+                                  localStorage.setItem('doom-formspree-id', val);
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="bg-black border border-stone-800 text-[9px] text-white font-mono px-2 py-1 flex-1 focus:outline-hidden focus:border-emerald-500"
+                            />
+                            {localFormspreeId && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setLocalFormspreeId('');
+                                  try {
+                                    localStorage.removeItem('doom-formspree-id');
+                                  } catch {}
+                                }}
+                                className="text-[8px] text-red-400 hover:text-red-300 font-bold uppercase border border-red-950 px-2"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[8px] text-stone-500 leading-normal">
+                            Your Formspree Form ID is saved directly to your local browser storage. Submit pitches and they will route to your inbox instantly!
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {!(import.meta as any).env.VITE_FORMSPREE_FORM_ID && (
-                    <p className="text-stone-500 leading-tight">
-                      To receive pitches in your real email inbox, add <code className="text-emerald-400 font-mono">VITE_FORMSPREE_FORM_ID</code> (your Formspree form ID or endpoint URL) into the project environment settings.
-                    </p>
-                  )}
-                </div>
+                )}
 
                 <div className="flex justify-between items-center pt-2">
-                  <span className="font-mono text-[9px] text-emerald-500 font-bold uppercase tracking-wider">DOOMBOT REVIEW PROTOCOL 77-A</span>
+                  <span 
+                    onDoubleClick={() => {
+                      const next = !showUplinkRegistry;
+                      setShowUplinkRegistry(next);
+                      try {
+                        localStorage.setItem('doom-show-uplink', next ? 'true' : 'false');
+                      } catch {}
+                    }}
+                    className="font-mono text-[9px] text-emerald-500 font-bold uppercase tracking-wider select-none cursor-help hover:text-emerald-400 transition-colors"
+                    title="Double click to toggle system configuration options"
+                  >
+                    DOOMBOT REVIEW PROTOCOL 77-A
+                  </span>
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -386,10 +476,14 @@ export default function ReviewVault() {
                     </div>
                     <p>
                       {formspreeStatus === 'success'
-                        ? ((import.meta as any).env.VITE_FORMSPREE_FORM_ID 
+                        ? (localFormspreeId || (import.meta as any).env.VITE_FORMSPREE_FORM_ID 
                           ? "Uplink verified. Your analytical scroll has bypassed defense walls and has been securely routed to the state mailbox!"
-                          : "Simulated submission successful! Once you add VITE_FORMSPREE_FORM_ID in settings, this submission will route directly to your email inbox.")
-                        : "State scramblers detected interference during transmission. Verify your VITE_FORMSPREE_FORM_ID settings and try again."
+                          : (showUplinkRegistry 
+                            ? "Simulated submission successful! Once you add VITE_FORMSPREE_FORM_ID in settings, this submission will route directly to your email inbox."
+                            : "Submission received! Your analytical scroll has been safely submitted to Lord Doom's servers for processing."))
+                        : (showUplinkRegistry
+                          ? "State scramblers detected interference during transmission. Verify your VITE_FORMSPREE_FORM_ID settings and try again."
+                          : "State scramblers detected interference during transmission. Please try again later.")
                       }
                     </p>
                   </motion.div>
