@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Shield, Skull, BookOpen, PenTool, MessageSquare, Award } from 'lucide-react';
+import { Shield, Skull, BookOpen, PenTool, MessageSquare, Eye } from 'lucide-react';
 
 interface NavbarProps {
   onScrollToSection: (id: string) => void;
   activeSection: string;
+  onReplayIntro: () => void;
 }
 
-export default function Navbar({ onScrollToSection, activeSection }: NavbarProps) {
+export default function Navbar({ onScrollToSection, activeSection, onReplayIntro }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -55,6 +56,16 @@ export default function Navbar({ onScrollToSection, activeSection }: NavbarProps
               </button>
             );
           })}
+
+          {/* Replay Intro Trigger */}
+          <button
+            onClick={onReplayIntro}
+            className="flex items-center space-x-1.5 px-4 py-2 font-bold text-xs uppercase border-2 border-transparent text-rose-400 hover:text-rose-300 hover:border-black hover:bg-stone-900 transition-all cursor-pointer"
+            title="Replay the sovereign cinematic intro"
+          >
+            <Eye className="w-3.5 h-3.5 text-rose-500" />
+            <span>Replay Intro</span>
+          </button>
         </div>
 
         {/* Latverian Flag Indicator */}

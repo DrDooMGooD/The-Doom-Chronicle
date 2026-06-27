@@ -79,7 +79,7 @@ export default function App() {
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-repeat z-40 halftone-bg" />
 
       {/* Top Navbar */}
-      <Navbar onScrollToSection={handleScrollToSection} activeSection={activeSection} />
+      <Navbar onScrollToSection={handleScrollToSection} activeSection={activeSection} onReplayIntro={handleReplayIntro} />
 
       {/* Main Sections */}
       <main className="relative">

@@ -40,12 +40,27 @@ const DOOM_TRIVIA: TriviaQuestion[] = [
   }
 ];
 
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function DoomIntro({ onComplete }: DoomIntroProps) {
-  // Curate a random question on mount
-  const [currentQuestion, setCurrentQuestion] = useState<TriviaQuestion>(() => {
-    const randomIndex = Math.floor(Math.random() * DOOM_TRIVIA.length);
-    return DOOM_TRIVIA[randomIndex];
+  // Shuffle all questions on mount with randomized options
+  const [shuffledQuestions, setShuffledQuestions] = useState<TriviaQuestion[]>(() => {
+    const shuffledQ = shuffleArray(DOOM_TRIVIA);
+    return shuffledQ.map(q => ({
+      ...q,
+      options: shuffleArray(q.options)
+    }));
   });
+
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const currentQuestion = shuffledQuestions[questionIndex] || shuffledQuestions[0];
 
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [triviaStatus, setTriviaStatus] = useState<'unanswered' | 'correct' | 'incorrect'>('unanswered');
@@ -57,7 +72,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
   const [clickMessage, setClickMessage] = useState<string | null>(null);
 
   // Image Source state with robust fallbacks
-  const [imgUrl, setImgUrl] = useState('https://static.wikia.nocookie.net/marveldatabase/images/d/df/Fantastic_Four_Vol_1_85.jpg');
+  const [imgUrl, setImgUrl] = useState('https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47');
   const [isImgError, setIsImgError] = useState(false);
 
   const handleImageError = () => {
@@ -114,10 +129,8 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
     setSelectedOption(null);
     setTriviaStatus('unanswered');
     setShowHint(false);
-    // Find a different question
-    const available = DOOM_TRIVIA.filter(q => q.question !== currentQuestion.question);
-    const nextQ = available[Math.floor(Math.random() * available.length)];
-    setCurrentQuestion(nextQ || DOOM_TRIVIA[0]);
+    // Cycle to the next shuffled question
+    setQuestionIndex((prev) => (prev + 1) % shuffledQuestions.length);
   };
 
   return (
@@ -190,7 +203,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                 alt="Sovereign Lord Doom"
                 onError={handleImageError}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover select-none pointer-events-none"
+                className="w-full h-full object-contain bg-stone-950 select-none pointer-events-none"
               />
 
               {/* Grid / Scanning Laser Line Overlay */}

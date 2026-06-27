@@ -110,7 +110,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
         </div>
 
         {/* Right Side: Doom Graphic Panel & Comic Dialogue (5 Columns) */}
-        <div className="lg:col-span-5 flex flex-col justify-between bg-stone-900 border-4 border-black p-6 shadow-comic relative min-h-[400px]">
+        <div className="lg:col-span-5 flex flex-col justify-center items-center bg-stone-900 border-4 border-black p-6 shadow-comic relative min-h-[400px] gap-6">
           
           {/* Comic halftone background purely for the Doom graphic panel */}
           <div className="absolute inset-0 halftone-green opacity-40 pointer-events-none" />
@@ -128,7 +128,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
           )}
 
           {/* Dr. Doom Speech bubble */}
-          <div className="bg-white text-black p-5 border-4 border-black shadow-comic relative rounded-sm z-10 skew-comic-r mb-8">
+          <div className="bg-white text-black p-5 border-4 border-black shadow-comic relative rounded-sm z-10 skew-comic-r w-full">
             <Quote className="absolute -top-3 -left-3 w-6 h-6 text-emerald-700 bg-white border-2 border-black rounded-full p-1" />
             <h4 className="font-comic text-xl text-emerald-800 uppercase tracking-wide mb-1 flex items-center space-x-1.5">
               <span>LORD DOOM SPEAKS:</span>
@@ -140,37 +140,18 @@ export default function Hero({ onExploreClick }: HeroProps) {
             <div className="absolute -bottom-[20px] left-[39px] w-0 h-0 border-l-[13px] border-l-transparent border-r-[13px] border-r-transparent border-t-[15px] border-t-black -z-10" />
           </div>
 
-          {/* Vector representation of Dr. Doom (Royal High-Contrast Portrait) */}
-          <div className="relative flex-1 flex items-end justify-center pt-4 z-0">
+          {/* Classic Sovereign Portrait representation of Dr. Doom */}
+          <div className="relative flex justify-center py-2 z-0">
             <div className="relative w-64 h-64 sm:w-72 sm:h-72 border-4 border-black bg-stone-950 overflow-hidden shadow-comic rounded-full flex items-center justify-center">
-              {/* Abstract glowing eyes / shield mask representation */}
-              <div className="absolute inset-0 bg-emerald-950/80 halftone-green" />
-              
-              {/* Stylized Doom Hood Silhouette & Mask in high-contrast SVG */}
-              <svg className="w-56 h-56 relative z-10 text-stone-200 fill-current" viewBox="0 0 100 100">
-                {/* Hood outline in emerald */}
-                <path d="M 15 90 C 20 40, 30 15, 50 15 C 70 15, 80 40, 85 90 C 70 90, 30 90, 15 90 Z" fill="#065f46" stroke="#000" strokeWidth="2" />
-                {/* Hood shadow fold */}
-                <path d="M 25 90 C 28 50, 35 30, 50 30 C 65 30, 72 50, 75 90 C 65 90, 35 90, 25 90 Z" fill="#044e37" stroke="#000" strokeWidth="1" />
-                {/* Iron Mask Core Faceplate */}
-                <path d="M 38 45 C 38 38, 62 38, 62 45 C 62 65, 58 75, 50 82 C 42 75, 38 65, 38 45 Z" fill="#94a3b8" stroke="#000" strokeWidth="2.5" />
-                {/* Rivets and steel lines */}
-                <circle cx="50" cy="40" r="1.5" fill="#475569" />
-                <line x1="50" y1="41" x2="50" y2="55" stroke="#000" strokeWidth="1.5" />
-                {/* Angled Eyes holes (Glinting Red glow) */}
-                <path d="M 42 46 C 45 44, 48 48, 45 49 Z" fill="#b91c1c" stroke="#000" strokeWidth="1" />
-                <path d="M 58 46 C 55 44, 52 48, 55 49 Z" fill="#b91c1c" stroke="#000" strokeWidth="1" />
-                <circle cx="44.5" cy="47" r="1" fill="#f87171" className="animate-ping" />
-                <circle cx="55.5" cy="47" r="1" fill="#f87171" className="animate-ping" />
-                {/* Iron Mouth Guard Grille */}
-                <rect x="44" y="62" width="12" height="6" fill="#475569" stroke="#000" strokeWidth="1.5" rx="1" />
-                <line x1="47" y1="62" x2="47" y2="68" stroke="#000" strokeWidth="1" />
-                <line x1="50" y1="62" x2="50" y2="68" stroke="#000" strokeWidth="1" />
-                <line x1="53" y1="62" x2="53" y2="68" stroke="#000" strokeWidth="1" />
-              </svg>
+              <img
+                src="https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47"
+                alt="Sovereign Lord Doom"
+                className="w-full h-full object-cover select-none"
+                referrerPolicy="no-referrer"
+              />
               
               {/* Glowing Ambient Indicator */}
-              <div className="absolute top-4 right-4 bg-red-600 border border-black text-[9px] text-white px-1.5 py-0.5 rounded-xs font-mono font-bold animate-pulse">
+              <div className="absolute top-4 right-4 bg-red-600 border border-black text-[9px] text-white px-1.5 py-0.5 rounded-xs font-mono font-bold animate-pulse z-10">
                 DOOM-CAM ONLINE
               </div>
             </div>
