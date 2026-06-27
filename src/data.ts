@@ -1,6 +1,8 @@
 import { Article, DoomQuote, GuestbookEntry } from './types';
 
-export const articles: Article[] = [
+export const articles: Article[] = [];
+
+export const sampleArticles: Article[] = [
   {
     id: 'art-1',
     title: 'Secret Wars (1984) - The Ultimate Comic Chronicle',

@@ -5,11 +5,9 @@ interface NavbarProps {
   onScrollToSection: (id: string) => void;
   activeSection: string;
   onReplayIntro: () => void;
-  onToggleCMS: () => void;
-  showCMS: boolean;
 }
 
-export default function Navbar({ onScrollToSection, activeSection, onReplayIntro, onToggleCMS, showCMS }: NavbarProps) {
+export default function Navbar({ onScrollToSection, activeSection, onReplayIntro }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -22,10 +20,7 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
         {/* Brand Logo: Styled like a retro Marvel header */}
         <div
           id="doom-logo"
-          onClick={() => {
-            if (showCMS) onToggleCMS();
-            onScrollToSection('hero');
-          }}
+          onClick={() => onScrollToSection('hero')}
           className="flex items-center space-x-2 cursor-pointer group bg-emerald-800 hover:bg-rose-600 border-2 border-black px-3 py-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
         >
           <Shield className="w-6 h-6 text-yellow-400 fill-yellow-400 animate-pulse" />
@@ -45,13 +40,12 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             { id: 'counsel', label: 'Doom\'s Counsel', icon: <MessageSquare className="w-3.5 h-3.5" /> },
             { id: 'tribute', label: 'Sovereign Registry', icon: <PenTool className="w-3.5 h-3.5" /> }
           ].map((item) => {
-            const isActive = activeSection === item.id && !showCMS;
+            const isActive = activeSection === item.id;
             return (
               <button
                 key={item.id}
-                disabled={showCMS}
                 onClick={() => onScrollToSection(item.id)}
-                className={`flex items-center space-x-1.5 px-4 py-2 font-bold text-xs uppercase border-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex items-center space-x-1.5 px-4 py-2 font-bold text-xs uppercase border-2 transition-all cursor-pointer ${
                   isActive
                     ? 'bg-emerald-700 text-white border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                     : 'bg-transparent text-stone-300 border-transparent hover:text-rose-500 hover:border-black'
@@ -74,21 +68,8 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
           </button>
         </div>
 
-        {/* Latverian Flag Indicator & Admin button */}
-        <div className="flex items-center space-x-4">
-          {/* CMS dashboard toggle button */}
-          <button
-            onClick={onToggleCMS}
-            className={`flex items-center space-x-1.5 px-4 py-2 font-bold text-xs uppercase border-2 transition-all cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none ${
-              showCMS
-                ? 'bg-red-600 text-white border-black'
-                : 'bg-stone-900 text-yellow-400 border-yellow-600 hover:bg-yellow-600 hover:text-black hover:border-black'
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5 shrink-0" />
-            <span>{showCMS ? 'Exit Control' : 'Castle Control'}</span>
-          </button>
-
+        {/* Latverian Flag Indicator */}
+        <div className="flex items-center space-x-2">
           <div className="hidden sm:flex flex-col items-end text-[10px] text-stone-400">
             <span className="font-bold text-emerald-500">LATVERIA STATE SECURE</span>
             <span>DOOMSTADT CORE v4.1</span>
