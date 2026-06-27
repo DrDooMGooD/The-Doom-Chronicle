@@ -12,13 +12,6 @@ export interface Article {
   doomVerdict: string; // Lord Doom's executive quote about it
   slug: string;
   featured?: boolean;
-  status?: 'draft' | 'pending_review' | 'published';
-  authorName?: string;
-  faqs?: { question: string; answer: string }[];
-  geoRegion?: string;
-  seoTitle?: string;
-  seoDescription?: string;
-  schemaMarkup?: any;
 }
 
 export interface GuestbookEntry {
