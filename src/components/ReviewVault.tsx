@@ -1,13 +1,44 @@
-import { useState, useMemo, FormEvent } from 'react';
+import { useState, useMemo, FormEvent, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings } from 'lucide-react';
-import { articles } from '../data';
+import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings, Loader2 } from 'lucide-react';
 import { Article } from '../types';
+import { fetchArticles, submitProposal } from '../services/api';
 
 export default function ReviewVault() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'game' | 'comic' | 'movie'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+
+  // Database articles state
+  const [articlesList, setArticlesList] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchArticles();
+        if (active) {
+          setArticlesList(data);
+          setLoadError(null);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) {
+          setLoadError('Failed to synchronize with Royal Database. Displaying offline scrolls.');
+          // Load default static articles
+          const m = await import('../data');
+          setArticlesList(m.articles);
+        }
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+    loadData();
+    return () => { active = false; };
+  }, []);
 
   // Community proposal form states
   const [pitchTitle, setPitchTitle] = useState('');
@@ -42,15 +73,35 @@ export default function ReviewVault() {
     }
   });
 
+  // Dynamic injection of schema JSON-LD inside head
+  useEffect(() => {
+    if (!selectedArticle) return;
+    const schema = selectedArticle.schemaMarkup;
+    if (!schema || Object.keys(schema).length === 0) return;
+
+    const script = document.createElement('script');
+    script.setAttribute('type', 'application/ld+json');
+    script.setAttribute('id', 'ld-json-schema');
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+
+    return () => {
+      const existing = document.getElementById('ld-json-schema');
+      if (existing) {
+        existing.remove();
+      }
+    };
+  }, [selectedArticle]);
+
   const filteredArticles = useMemo(() => {
-    return articles.filter((art) => {
+    return articlesList.filter((art) => {
       const matchesCategory = selectedCategory === 'all' || art.category === selectedCategory;
       const matchesSearch = art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, articlesList]);
 
   // Doom's automatic comical response system for submitted pitches
   const handlePitchSubmit = async (e: FormEvent) => {
@@ -78,6 +129,20 @@ export default function ReviewVault() {
     }
 
     setPitchResponse({ status, message });
+
+    // Submit proposal to backend DB for review queue
+    try {
+      await submitProposal({
+        name: pitchName,
+        email: pitchEmail,
+        title: pitchTitle,
+        category: pitchCategory,
+        manuscript: pitchText,
+        doom_verdict: message,
+      });
+    } catch (dbErr) {
+      console.error('Error submitting proposal to DB:', dbErr);
+    }
 
     const formspreeFormId = localFormspreeId || (import.meta as any).env.VITE_FORMSPREE_FORM_ID;
     const formspreeUrl = formspreeFormId
@@ -574,8 +639,14 @@ export default function ReviewVault() {
               <div className="p-6 sm:p-8 space-y-6">
                 
                 {/* Meta details column */}
-                <div className="flex flex-wrap items-center justify-between border-b border-stone-800 pb-4 text-xs font-mono text-stone-400">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 items-center justify-between border-b border-stone-800 pb-4 text-xs font-mono text-stone-400">
                   <span>CHRONICLED ON: {selectedArticle.publishDate}</span>
+                  {selectedArticle.authorName && (
+                    <span>SCRIBE: {selectedArticle.authorName}</span>
+                  )}
+                  {selectedArticle.geoRegion && (
+                    <span>REGION: {selectedArticle.geoRegion}</span>
+                  )}
                   <span>READ TIME: {selectedArticle.readTime}</span>
                 </div>
 
@@ -585,6 +656,23 @@ export default function ReviewVault() {
                     <p key={idx} className="mb-4">{paragraph}</p>
                   ))}
                 </div>
+
+                {/* Dynamic FAQs Accordion in comic design */}
+                {selectedArticle.faqs && selectedArticle.faqs.length > 0 && (
+                  <div className="border-4 border-black p-5 bg-stone-900 shadow-comic mt-6 font-mono">
+                    <h4 className="font-comic text-xl text-yellow-400 uppercase tracking-wider mb-4 border-b-2 border-black pb-2 animate-pulse">
+                      ⚔️ STATE RECORD: FREQUENTLY ASKED QUESTIONS
+                    </h4>
+                    <div className="space-y-4">
+                      {selectedArticle.faqs.map((faq, index) => (
+                        <div key={index} className="border border-stone-850 p-3 bg-stone-950 rounded-xs shadow-sm">
+                          <p className="text-xs font-bold text-rose-500 uppercase font-mono">Q: {faq.question}</p>
+                          <p className="text-xs text-stone-300 mt-1.5 leading-relaxed font-sans">A: {faq.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Sovereign Edict Box (The Doom Homage Verdict Section) */}
                 <div className="bg-stone-900 border-4 border-emerald-800 p-5 sm:p-6 shadow-comic relative mt-12 overflow-hidden">
