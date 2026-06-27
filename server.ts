@@ -222,6 +222,18 @@ const agentOrAdminAuth = (req: express.Request, res: express.Response, next: exp
 
 // Endpoints
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    supabaseUrlConfigured: !!process.env.SUPABASE_URL,
+    supabaseServiceKeyConfigured: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    supabaseClientInitialized: !!supabase,
+    supabaseUrlLength: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.length : 0,
+    supabaseUrlFirstChar: process.env.SUPABASE_URL ? process.env.SUPABASE_URL[0] : '',
+    supabaseUrlLastChar: process.env.SUPABASE_URL ? process.env.SUPABASE_URL[process.env.SUPABASE_URL.length - 1] : '',
+    isSimulationMode: !supabase
+  });
+});
+
 // 1. GET /api/articles (Public: reads only published articles)
 app.get('/api/articles', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
