@@ -74,11 +74,14 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             <span className="font-bold text-emerald-500">LATVERIA STATE SECURE</span>
             <span>DOOMSTADT CORE v4.1</span>
           </div>
-          {/* Latverian Flag: Black, Green, Red Stripes */}
-          <div className="w-10 h-6 border-2 border-black flex flex-col overflow-hidden shadow-comic shrink-0">
-            <div className="bg-black flex-1"></div>
-            <div className="bg-emerald-700 flex-1"></div>
-            <div className="bg-red-600 flex-1"></div>
+          {/* Latverian Flag: Official SVG Flag of Latveria with Waving Effects */}
+          <div className="relative overflow-visible">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/b/bf/Flag_of_Latveria.svg"
+              alt="Flag of Latveria"
+              className="w-10 h-6 border-2 border-black object-cover shadow-comic shrink-0 animate-flag-wave"
+              referrerPolicy="no-referrer"
+            />
           </div>
         </div>
 

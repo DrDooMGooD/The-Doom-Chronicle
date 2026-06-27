@@ -108,3 +108,22 @@
 .animate-halftone {
   animation: pulse-halftone 3s ease-in-out infinite;
 }
+
+/* Flag Waving Animation */
+@keyframes flag-wave {
+  0% {
+    transform: perspective(120px) rotateX(4deg) rotateY(-8deg) rotateZ(0deg) skewY(0deg);
+  }
+  50% {
+    transform: perspective(120px) rotateX(-4deg) rotateY(8deg) rotateZ(2deg) skewY(1.5deg);
+  }
+  100% {
+    transform: perspective(120px) rotateX(4deg) rotateY(-8deg) rotateZ(0deg) skewY(0deg);
+  }
+}
+
+.animate-flag-wave {
+  animation: flag-wave 1.6s ease-in-out infinite;
+  transform-origin: left center;
+}
+
