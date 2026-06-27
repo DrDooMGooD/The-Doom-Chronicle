@@ -5,7 +5,8 @@ import ReviewVault from './components/ReviewVault';
 import DoomCounsel from './components/DoomCounsel';
 import LatverianGuestbook from './components/LatverianGuestbook';
 import DoomIntro from './components/DoomIntro';
-import { Shield, ArrowUp, Skull, Eye } from 'lucide-react';
+import CMSDashboard from './components/CMSDashboard';
+import { Shield, ArrowUp, Skull, Heart, Eye } from 'lucide-react';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -18,6 +19,7 @@ export default function App() {
       return true;
     }
   });
+  const [showCMS, setShowCMS] = useState(false);
 
   // Monitor scroll height to display "scroll to top" button and active nav section
   useEffect(() => {
@@ -79,24 +81,34 @@ export default function App() {
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-repeat z-40 halftone-bg" />
 
       {/* Top Navbar */}
-      <Navbar onScrollToSection={handleScrollToSection} activeSection={activeSection} onReplayIntro={handleReplayIntro} />
+      <Navbar 
+        onScrollToSection={handleScrollToSection} 
+        activeSection={activeSection} 
+        onReplayIntro={handleReplayIntro}
+        onToggleCMS={() => setShowCMS(!showCMS)}
+        showCMS={showCMS}
+      />
 
-      {/* Main Sections */}
-      <main className="relative">
-        
-        {/* 1. Hero / Sovereign Gateway */}
-        <Hero onExploreClick={() => handleScrollToSection('reviews')} />
+      {/* Main Sections / Dashboard */}
+      {showCMS ? (
+        <CMSDashboard onClose={() => setShowCMS(false)} />
+      ) : (
+        <main className="relative">
+          
+          {/* 1. Hero / Sovereign Gateway */}
+          <Hero onExploreClick={() => handleScrollToSection('reviews')} />
 
-        {/* 2. Review Vault Panel */}
-        <ReviewVault />
+          {/* 2. Review Vault Panel */}
+          <ReviewVault />
 
-        {/* 3. Doom's Counsel Interaction Board */}
-        <DoomCounsel />
+          {/* 3. Doom's Counsel Interaction Board */}
+          <DoomCounsel />
 
-        {/* 4. Subject Tribute Ledger Guestbook */}
-        <LatverianGuestbook />
+          {/* 4. Subject Tribute Ledger Guestbook */}
+          <LatverianGuestbook />
 
-      </main>
+        </main>
+      )}
 
       {/* Retro Comic styled Footer */}
       <footer className="bg-stone-950 border-t-8 border-black text-white pt-16 pb-10 relative overflow-hidden font-mono">
