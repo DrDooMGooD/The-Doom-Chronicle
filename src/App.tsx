@@ -85,13 +85,21 @@ export default function App() {
         onScrollToSection={handleScrollToSection} 
         activeSection={activeSection} 
         onReplayIntro={handleReplayIntro}
-        onToggleCMS={() => setShowCMS(!showCMS)}
+        onToggleCMS={() => {
+          if (showCMS) {
+            localStorage.removeItem('castle_passcode');
+          }
+          setShowCMS(!showCMS);
+        }}
         showCMS={showCMS}
       />
 
       {/* Main Sections / Dashboard */}
       {showCMS ? (
-        <CMSDashboard onClose={() => setShowCMS(false)} />
+        <CMSDashboard onClose={() => {
+          localStorage.removeItem('castle_passcode');
+          setShowCMS(false);
+        }} />
       ) : (
         <main className="relative">
           
