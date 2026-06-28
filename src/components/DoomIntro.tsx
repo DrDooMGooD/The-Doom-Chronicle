@@ -231,8 +231,8 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
 
               {/* Bottom Caption Overlay */}
               {!isZooming && (
-                <div className="bg-black/90 border-t-2 border-black p-2 text-center">
-                  <span className="text-[9px] sm:text-[10px] text-stone-400 font-sans tracking-wide block">
+                <div className="bg-black/90 border-t-2 border-black p-2.5 text-center">
+                  <span className="text-xs sm:text-sm text-stone-300 font-sans tracking-wide font-medium block">
                     PORTRAIT SECURE • CLICK MASK FOR SECRET CHRONICLE CODES
                   </span>
                 </div>
@@ -337,7 +337,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                     <button
                       disabled={triviaStatus === 'correct'}
                       onClick={() => setShowHint(!showHint)}
-                      className="text-[9px] sm:text-[10px] text-stone-400 hover:text-emerald-400 flex items-center space-x-1.5 transition-colors cursor-pointer uppercase"
+                      className="text-xs sm:text-sm text-stone-400 hover:text-emerald-400 flex items-center space-x-1.5 transition-colors cursor-pointer uppercase font-bold"
                     >
                       <HelpCircle className="w-3.5 h-3.5" />
                       <span>{showHint ? "Hide Sovereign Hint" : "Request Sovereign Hint"}</span>
@@ -346,7 +346,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                     {triviaStatus === 'incorrect' && (
                       <button
                         onClick={handleNextQuestion}
-                        className="text-[9px] sm:text-[10px] bg-stone-950 hover:bg-stone-850 text-emerald-400 hover:text-emerald-300 border border-emerald-950 hover:border-emerald-700 px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer uppercase"
+                        className="text-xs sm:text-sm bg-stone-950 hover:bg-stone-850 text-emerald-400 hover:text-emerald-300 border border-emerald-950 hover:border-emerald-700 px-3.5 py-2 flex items-center space-x-1 transition-colors cursor-pointer uppercase font-bold"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Next Question</span>
@@ -356,7 +356,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
 
                   {/* Hint Text Display */}
                   {showHint && !isZooming && (
-                    <div className="mt-2.5 bg-stone-950/90 border border-emerald-900 p-2 text-[10px] sm:text-[11px] text-stone-300 font-sans leading-relaxed">
+                    <div className="mt-2.5 bg-stone-950/90 border border-emerald-900 p-2 text-xs sm:text-sm text-stone-300 font-sans leading-relaxed">
                       <strong className="text-emerald-400 uppercase font-mono mr-1">Hint:</strong> 
                       {currentQuestion.hint}
                     </div>

@@ -607,7 +607,7 @@ export default function ReviewVault() {
                 </div>
                 <button
                   onClick={() => setSelectedArticle(null)}
-                  className="bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-xs border-2 border-black px-3 py-1 cursor-pointer transition-colors uppercase"
+                  className="bg-red-650 hover:bg-red-500 text-white font-mono font-bold text-xs border-2 border-black px-3 py-1 cursor-pointer transition-colors uppercase"
                 >
                   X CLOSE
                 </button>

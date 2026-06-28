@@ -23,6 +23,7 @@ export interface Article {
   seoTitle?: string;
   seoDescription?: string;
   faqs?: FAQItem[];
+  schemaMarkup?: any; // To allow safe access to schemaMarkup if needed by head inject
 }
 
 export interface GuestbookEntry {

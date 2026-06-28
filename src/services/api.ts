@@ -1,15 +1,6 @@
 import { Article } from '../types';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
-const getExpectedPasscode = () => {
-  try {
-    const env = (import.meta as any).env || {};
-    return env.VITE_ADMIN_PASSPHRASE || 'Hackboy4711!';
-  } catch {
-    return 'Hackboy4711!';
-  }
-};
-
 // Helper to convert DB keys (snake_case) to Frontend keys (camelCase)
 function dbToApp(row: any): Article {
   return {
@@ -72,7 +63,7 @@ export async function fetchArticles(): Promise<Article[]> {
 }
 
 export async function fetchAdminArticles(passcode: string): Promise<Article[]> {
-  if (passcode !== getExpectedPasscode()) {
+  if (passcode !== 'latveria') {
     throw new Error('ACCESS DENIED: Unauthorized Passcode');
   }
   const client = getSupabaseClient() as any;
@@ -85,7 +76,7 @@ export async function fetchAdminArticles(passcode: string): Promise<Article[]> {
 }
 
 export async function createArticle(article: Partial<Article>, passcode: string): Promise<Article> {
-  if (passcode !== getExpectedPasscode()) {
+  if (passcode !== 'latveria') {
     throw new Error('ACCESS DENIED: Unauthorized Passcode');
   }
   const client = getSupabaseClient() as any;
@@ -115,7 +106,7 @@ export async function createArticle(article: Partial<Article>, passcode: string)
 }
 
 export async function updateArticle(id: string, updates: Partial<Article>, passcode: string): Promise<Article> {
-  if (passcode !== getExpectedPasscode()) {
+  if (passcode !== 'latveria') {
     throw new Error('ACCESS DENIED: Unauthorized Passcode');
   }
   const client = getSupabaseClient() as any;
@@ -134,7 +125,7 @@ export async function updateArticle(id: string, updates: Partial<Article>, passc
 }
 
 export async function deleteArticle(id: string, passcode: string): Promise<void> {
-  if (passcode !== getExpectedPasscode()) {
+  if (passcode !== 'latveria') {
     throw new Error('ACCESS DENIED: Unauthorized Passcode');
   }
   const client = getSupabaseClient() as any;
