@@ -1,43 +1,44 @@
 import { useState, useMemo, FormEvent, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings,
-  Database, RefreshCw, HardDriveDownload, AlertCircle, Sparkles, CheckCircle2
-} from 'lucide-react';
-import { articles, sampleArticles } from '../data';
+import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings, Loader2 } from 'lucide-react';
 import { Article } from '../types';
-import { getSupabaseClient, getSupabaseConfig, resetSupabaseInstance } from '../lib/supabaseClient';
+import { fetchArticles, submitProposal } from '../services/api';
 
 export default function ReviewVault() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'game' | 'comic' | 'movie'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
-  // Supabase states
-  const [allArticles, setAllArticles] = useState<Article[]>(articles);
-  const [isLoadingArticles, setIsLoadingArticles] = useState(false);
-  const [supabaseError, setSupabaseError] = useState<string | null>(null);
-  const [supabaseStatus, setSupabaseStatus] = useState<'disconnected' | 'connected' | 'error'>('disconnected');
+  // Database articles state
+  const [articlesList, setArticlesList] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Input fields for Supabase configuration
-  const [supabaseUrlInput, setSupabaseUrlInput] = useState(() => {
-    try {
-      return (import.meta as any).env.VITE_SUPABASE_URL || localStorage.getItem('supabase-url') || '';
-    } catch {
-      return '';
-    }
-  });
-  const [supabaseAnonKeyInput, setSupabaseAnonKeyInput] = useState(() => {
-    try {
-      return (import.meta as any).env.VITE_SUPABASE_ANON_KEY || localStorage.getItem('supabase-anon-key') || '';
-    } catch {
-      return '';
-    }
-  });
-
-  const [showSupabaseConsole, setShowSupabaseConsole] = useState(false);
-  const [showSqlSchema, setShowSqlSchema] = useState(false);
-  const [seedStatus, setSeedStatus] = useState<{ status: 'idle' | 'success' | 'error', message: string }>({ status: 'idle', message: '' });
+  useEffect(() => {
+    let active = true;
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchArticles();
+        if (active) {
+          setArticlesList(data);
+          setLoadError(null);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) {
+          setLoadError('Failed to synchronize with Royal Database. Displaying offline scrolls.');
+          // Load default static articles
+          const m = await import('../data');
+          setArticlesList(m.articles);
+        }
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+    loadData();
+    return () => { active = false; };
+  }, []);
 
   // Community proposal form states
   const [pitchTitle, setPitchTitle] = useState('');
@@ -72,143 +73,35 @@ export default function ReviewVault() {
     }
   });
 
-  // Supabase Fetch and seeding engines
-  const fetchArticlesFromSupabase = async (silent = false) => {
-    const client = getSupabaseClient();
-    if (!client) {
-      setSupabaseStatus('disconnected');
-      setAllArticles(articles);
-      return;
-    }
-
-    if (!silent) setIsLoadingArticles(true);
-    setSupabaseError(null);
-
-    try {
-      const { data, error } = await client
-        .from('articles')
-        .select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        const parsed: Article[] = data.map((row: any) => ({
-          id: String(row.id),
-          title: String(row.title || ''),
-          category: (row.category || 'game') as 'game' | 'comic' | 'movie',
-          subtitle: String(row.subtitle || ''),
-          excerpt: String(row.excerpt || ''),
-          content: String(row.content || ''),
-          publishDate: String(row.publishDate || row.publish_date || ''),
-          readTime: String(row.readTime || row.read_time || ''),
-          imageUrl: String(row.imageUrl || row.image_url || ''),
-          doomRating: Number(row.doomRating || row.doom_rating || 0),
-          doomVerdict: String(row.doomVerdict || row.doom_verdict || ''),
-          slug: String(row.slug || ''),
-          featured: Boolean(row.featured)
-        }));
-        
-        setAllArticles(parsed);
-        setSupabaseStatus('connected');
-      } else {
-        // Table exists but is empty
-        setAllArticles([]);
-        setSupabaseStatus('connected');
-      }
-    } catch (err: any) {
-      console.error('Error fetching from Supabase:', err);
-      setSupabaseError(err.message || 'Error loading articles table.');
-      setSupabaseStatus('error');
-      // Graceful fallback to static articles
-      setAllArticles(articles);
-    } finally {
-      if (!silent) setIsLoadingArticles(false);
-    }
-  };
-
-  const saveSupabaseConnection = (url: string, key: string) => {
-    try {
-      localStorage.setItem('supabase-url', url.trim());
-      localStorage.setItem('supabase-anon-key', key.trim());
-      setSupabaseUrlInput(url.trim());
-      setSupabaseAnonKeyInput(key.trim());
-      resetSupabaseInstance();
-      setSeedStatus({ status: 'idle', message: '' });
-    } catch (err) {
-      console.error('Failed to save to local storage', err);
-    }
-  };
-
-  const seedArticlesToSupabase = async () => {
-    const client = getSupabaseClient();
-    if (!client) {
-      setSeedStatus({ status: 'error', message: 'Database client not initialized. Check your credentials!' });
-      return;
-    }
-
-    setIsLoadingArticles(true);
-    setSeedStatus({ status: 'idle', message: '' });
-
-    try {
-      const payload = sampleArticles.map((art) => ({
-        id: art.id,
-        title: art.title,
-        category: art.category,
-        subtitle: art.subtitle,
-        excerpt: art.excerpt,
-        content: art.content,
-        publish_date: art.publishDate,
-        read_time: art.readTime,
-        image_url: art.imageUrl,
-        doom_rating: art.doomRating,
-        doom_verdict: art.doomVerdict,
-        slug: art.slug,
-        featured: art.featured || false
-      }));
-
-      const { error } = await (client
-        .from('articles') as any)
-        .upsert(payload, { onConflict: 'id' });
-
-      if (error) {
-        throw error;
-      }
-
-      setSeedStatus({
-        status: 'success',
-        message: 'SUBLIME VICTORY! 5 Sovereign Chronicles have been successfully written into your Supabase table!'
-      });
-      
-      // Refresh list
-      await fetchArticlesFromSupabase(true);
-    } catch (err: any) {
-      console.error('Seed failure:', err);
-      setSeedStatus({
-        status: 'error',
-        message: `DEFIANCE ENCOUNTERED: ${err.message || 'Make sure you have created the table using the SQL code schema below!'}`
-      });
-    } finally {
-      setIsLoadingArticles(false);
-    }
-  };
-
-  // Run on mount and whenever input variables update
+  // Dynamic injection of schema JSON-LD inside head
   useEffect(() => {
-    fetchArticlesFromSupabase();
-  }, [supabaseUrlInput, supabaseAnonKeyInput]);
+    if (!selectedArticle) return;
+    const schema = selectedArticle.schemaMarkup;
+    if (!schema || Object.keys(schema).length === 0) return;
+
+    const script = document.createElement('script');
+    script.setAttribute('type', 'application/ld+json');
+    script.setAttribute('id', 'ld-json-schema');
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+
+    return () => {
+      const existing = document.getElementById('ld-json-schema');
+      if (existing) {
+        existing.remove();
+      }
+    };
+  }, [selectedArticle]);
 
   const filteredArticles = useMemo(() => {
-    return allArticles.filter((art) => {
+    return articlesList.filter((art) => {
       const matchesCategory = selectedCategory === 'all' || art.category === selectedCategory;
       const matchesSearch = art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [allArticles, selectedCategory, searchQuery]);
-
+  }, [selectedCategory, searchQuery, articlesList]);
 
   // Doom's automatic comical response system for submitted pitches
   const handlePitchSubmit = async (e: FormEvent) => {
@@ -236,6 +129,20 @@ export default function ReviewVault() {
     }
 
     setPitchResponse({ status, message });
+
+    // Submit proposal to backend DB for review queue
+    try {
+      await submitProposal({
+        name: pitchName,
+        email: pitchEmail,
+        title: pitchTitle,
+        category: pitchCategory,
+        manuscript: pitchText,
+        doom_verdict: message,
+      });
+    } catch (dbErr) {
+      console.error('Error submitting proposal to DB:', dbErr);
+    }
 
     const formspreeFormId = localFormspreeId || (import.meta as any).env.VITE_FORMSPREE_FORM_ID;
     const formspreeUrl = formspreeFormId
@@ -303,225 +210,6 @@ export default function ReviewVault() {
           </p>
         </div>
 
-        {/* Supabase sovereign integration gateway */}
-        <div className="mb-10 bg-stone-950 border-4 border-black p-5 relative overflow-hidden shadow-comic-green">
-          <div className="absolute inset-0 halftone-green opacity-10 pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-stone-800 pb-4 mb-4">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Database className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-comic text-xl text-white uppercase tracking-wider">
-                  SOVEREIGN DATABASE INTEGRATION
-                </h3>
-              </div>
-              <p className="font-mono text-[10px] text-stone-400 mt-1 max-w-2xl">
-                CONNECTED TO SUPABASE CLOUD FOR DYNAMIC ARTICLE LEDGERS. YOUR ANTIGRAVITY CMS WRITE-BACKS SURFACE AUTOMATICALLY IN REAL-TIME.
-              </p>
-            </div>
-
-            {/* Status indicator badge */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1.5 bg-black border border-stone-800 px-3 py-1.5 font-mono text-[10px] font-bold uppercase rounded-xs">
-                <span className="text-stone-500 mr-1">STATUS:</span>
-                {supabaseStatus === 'connected' ? (
-                  <span className="text-emerald-400 flex items-center space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
-                    <span>● ONLINE</span>
-                  </span>
-                ) : supabaseStatus === 'error' ? (
-                  <span className="text-red-500 flex items-center space-x-1">
-                    <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
-                    <span>● CONNECTION CONFLICT</span>
-                  </span>
-                ) : (
-                  <span className="text-yellow-500 flex items-center space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" />
-                    <span>○ LOCAL FALLBACK MODE</span>
-                  </span>
-                )}
-              </div>
-
-              <button
-                onClick={() => fetchArticlesFromSupabase()}
-                disabled={isLoadingArticles}
-                className="bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white p-2 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                title="Force Refresh Data"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingArticles ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Info & Action Row */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <button
-              onClick={() => setShowSupabaseConsole(!showSupabaseConsole)}
-              className="flex items-center space-x-1 font-mono text-[10px] font-bold uppercase px-3 py-1.5 border-2 border-black bg-stone-900 text-stone-300 hover:text-white hover:bg-stone-850 cursor-pointer shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              <Settings className="w-3 h-3 text-emerald-400" />
-              <span>{showSupabaseConsole ? 'Hide Connection Portal' : 'Configure Connection Portal'}</span>
-            </button>
-
-            <button
-              onClick={() => setShowSqlSchema(!showSqlSchema)}
-              className="flex items-center space-x-1 font-mono text-[10px] font-bold uppercase px-3 py-1.5 border-2 border-black bg-stone-900 text-stone-300 hover:text-white hover:bg-stone-850 cursor-pointer shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              <Book className="w-3 h-3 text-rose-500" />
-              <span>{showSqlSchema ? 'Hide SQL Code Schema' : 'Generate SQL Table Schema'}</span>
-            </button>
-
-            {supabaseStatus === 'connected' && (
-              <button
-                onClick={seedArticlesToSupabase}
-                disabled={isLoadingArticles}
-                className="flex items-center space-x-1 font-mono text-[10px] font-bold uppercase px-3 py-1.5 border-2 border-black bg-emerald-950 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900 cursor-pointer shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
-              >
-                <HardDriveDownload className="w-3 h-3" />
-                <span>{isLoadingArticles ? 'Seeding...' : 'Seed Default Chronicles'}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Error notice banner */}
-          {supabaseError && (
-            <div className="mb-4 bg-red-950/40 border-2 border-red-900 p-3 flex items-start space-x-2 font-mono text-[10px] text-red-400">
-              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold uppercase block text-red-300 mb-0.5">STATE SCRAMBLER WARNING:</span>
-                <p className="leading-relaxed">
-                  {supabaseError.includes('relation "articles" does not exist') 
-                    ? 'The database table "articles" was not found on your Supabase instance. Please click the "Generate SQL Table Schema" button below, copy the SQL command, and run it in the SQL Editor of your Supabase Dashboard to instantiate it!'
-                    : supabaseError}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Seed success notice */}
-          {seedStatus.status !== 'idle' && (
-            <div className={`mb-4 border-2 p-3 flex items-start space-x-2 font-mono text-[10px] ${
-              seedStatus.status === 'success' 
-                ? 'bg-emerald-950/40 border-emerald-900 text-emerald-400' 
-                : 'bg-red-950/40 border-red-900 text-red-400'
-            }`}>
-              {seedStatus.status === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-              )}
-              <div>
-                <span className="font-bold uppercase block mb-0.5">
-                  {seedStatus.status === 'success' ? 'TRANSMISSION COMPLETE' : 'TRANSMISSION ABORTED'}
-                </span>
-                <p className="leading-relaxed">{seedStatus.message}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsible Connection Panel */}
-          {showSupabaseConsole && (
-            <div className="mb-4 bg-stone-900 border-2 border-black p-4 text-[10px] font-mono space-y-3 shadow-inner">
-              <span className="block font-bold uppercase text-stone-300 border-b border-stone-800 pb-1 flex items-center space-x-1.5">
-                <Settings className="w-3.5 h-3.5 text-emerald-400" />
-                <span>SUPABASE SECURE CONNECTION TERMINAL</span>
-              </span>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-stone-400 font-bold uppercase mb-1">SUPABASE URL</label>
-                  <input
-                    type="text"
-                    placeholder="https://your-project-id.supabase.co"
-                    value={supabaseUrlInput}
-                    onChange={(e) => saveSupabaseConnection(e.target.value, supabaseAnonKeyInput)}
-                    className="w-full bg-black border border-stone-800 text-[10px] font-mono text-white px-3 py-2 focus:outline-hidden focus:border-emerald-500"
-                  />
-                  <span className="text-[9px] text-stone-500 mt-1 block">Your private REST Endpoint (from API settings)</span>
-                </div>
-
-                <div>
-                  <label className="block text-stone-400 font-bold uppercase mb-1">SUPABASE ANON PUBLIC KEY</label>
-                  <input
-                    type="text"
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    value={supabaseAnonKeyInput}
-                    onChange={(e) => saveSupabaseConnection(supabaseUrlInput, e.target.value)}
-                    className="w-full bg-black border border-stone-800 text-[10px] font-mono text-white px-3 py-2 focus:outline-hidden focus:border-emerald-500"
-                  />
-                  <span className="text-[9px] text-stone-500 mt-1 block">Your public anon key (safe for browser exposure)</span>
-                </div>
-              </div>
-
-              <div className="bg-black/40 border border-stone-800 p-2.5 text-stone-400 leading-normal">
-                <p>
-                  <strong>💡 Pro-Tip:</strong> Enter these details here to establish instant connectivity in your local preview! For production, you can also set these environment variables in your workspace:
-                </p>
-                <div className="mt-1 flex flex-col gap-0.5 text-emerald-400 bg-stone-950 p-2 border border-stone-900 rounded-sm">
-                  <code>VITE_SUPABASE_URL="{supabaseUrlInput || 'your-url'}"</code>
-                  <code>VITE_SUPABASE_ANON_KEY="{supabaseAnonKeyInput || 'your-anon-key'}"</code>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsible SQL Schema Helper */}
-          {showSqlSchema && (
-            <div className="mb-4 bg-stone-900 border-2 border-black p-4 text-[10px] font-mono space-y-3">
-              <div className="flex justify-between items-center border-b border-stone-800 pb-1">
-                <span className="font-bold uppercase text-stone-300 flex items-center space-x-1.5">
-                  <Database className="w-3.5 h-3.5 text-rose-500" />
-                  <span>SUPABASE TABLE INITIALIZATION SQL</span>
-                </span>
-                <span className="bg-rose-950 text-rose-400 font-bold px-2 py-0.5 uppercase tracking-wide rounded-sm">
-                  Run inside Supabase SQL Editor
-                </span>
-              </div>
-              
-              <p className="text-stone-400 leading-normal">
-                Execute the following database command inside the **SQL Editor** of your Supabase dashboard to provision the correct table structure:
-              </p>
-
-              <pre className="bg-black text-emerald-400 p-3 border border-stone-800 overflow-x-auto text-[9px] max-h-60 leading-normal">
-{`-- 1. Create the sovereign reviews/articles table
-CREATE TABLE IF NOT EXISTS articles (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  category TEXT NOT NULL,
-  subtitle TEXT NOT NULL,
-  excerpt TEXT NOT NULL,
-  content TEXT NOT NULL,
-  publish_date TEXT NOT NULL,
-  read_time TEXT NOT NULL,
-  image_url TEXT NOT NULL,
-  doom_rating NUMERIC NOT NULL,
-  doom_verdict TEXT NOT NULL,
-  slug TEXT NOT NULL,
-  featured BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 2. Configure Row Level Security (RLS) for absolute safety
-ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
-
--- 3. Permit public read access to everyone
-CREATE POLICY "Allow public read access" 
-ON articles FOR SELECT 
-USING (true);
-
--- 4. Permit authenticated writes or all operations (ideal for your CMS)
-CREATE POLICY "Allow administrative actions" 
-ON articles FOR ALL 
-USING (true);`}
-              </pre>
-
-              <p className="text-stone-500 leading-normal">
-                Once executed, your custom Antigravity CMS, your local server on port 3000, and this preview will all seamlessly communicate with this identical database structure in real time!
-              </p>
-            </div>
-          )}
-        </div>
-
         {/* Filter Controls Bar */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-8">
           
@@ -565,107 +253,75 @@ USING (true);`}
         {/* Reviews Bento Grid Panel */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
-            {filteredArticles.length === 0 ? (
-              <motion.div
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="col-span-1 md:col-span-2 lg:col-span-3 border-4 border-dashed border-stone-800 bg-stone-950 p-10 text-center flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden"
-              >
-                <div className="absolute inset-0 halftone-green opacity-5 pointer-events-none" />
-                <Database className="w-12 h-12 text-stone-700 mb-4 animate-pulse" />
-                <h4 className="font-comic text-xl text-stone-300 uppercase tracking-wide">
-                  SOVEREIGN LEDGER IS EMPTY
-                </h4>
-                <p className="font-mono text-xs text-stone-400 mt-2 max-w-lg leading-relaxed">
-                  No chronicles have been loaded. Connect your Supabase instance inside the Sovereign Database Integration gateway above, or write back some articles via your custom Antigravity CMS!
-                </p>
-                {supabaseStatus === 'connected' ? (
-                  <button
-                    onClick={seedArticlesToSupabase}
-                    disabled={isLoadingArticles}
-                    className="mt-6 font-mono text-xs font-bold uppercase px-4 py-2 bg-emerald-950 text-emerald-400 hover:bg-emerald-900 border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                  >
-                    🌱 Seed Default Chronicles as Fallback
-                  </button>
-                ) : (
-                  <p className="font-mono text-[10px] text-yellow-500 mt-4 uppercase tracking-wider">
-                    ⚡ RUN MODE: LOCAL STANDBY. ESTABLISH SUPABASE PROTOCOL TO ENABLE DYNAMIC WRITING.
-                  </p>
-                )}
-              </motion.div>
-            ) : (
-              filteredArticles.map((article, index) => {
-                const isEven = index % 2 === 0;
-                return (
-                  <motion.div
-                    key={article.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-stone-950 border-4 border-black p-5 shadow-comic flex flex-col justify-between hover:scale-[1.01] transition-transform relative group overflow-hidden"
-                  >
-                    {/* Decorative corner tag */}
-                    <div className={`absolute top-0 right-0 w-8 h-8 ${isEven ? 'bg-red-600' : 'bg-emerald-700'} border-b-2 border-l-2 border-black rotate-45 translate-x-4 -translate-y-4`} />
-                    
-                    <div>
-                      {/* Header: Date and category */}
-                      <div className="flex items-center justify-between mb-3 text-[10px] font-mono font-bold text-stone-400">
-                        <span className="bg-stone-900 border border-stone-800 px-2 py-0.5 uppercase flex items-center space-x-1">
-                          {article.category === 'game' && <Gamepad2 className="w-3 h-3 text-emerald-400" />}
-                          {article.category === 'comic' && <Book className="w-3 h-3 text-rose-500" />}
-                          {article.category === 'movie' && <Film className="w-3 h-3 text-red-500" />}
-                          <span>{article.category}</span>
-                        </span>
-                        <span>{article.publishDate}</span>
-                      </div>
-
-                      {/* Comic Panel Cover Image representation */}
-                      <div className="relative border-2 border-black overflow-hidden mb-4 aspect-video shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter contrast-125"
-                        />
-                        <div className="absolute bottom-2 left-2 bg-black border border-white px-2 py-1 flex items-center space-x-1 font-comic text-yellow-400 text-sm tracking-wide">
-                          <Shield className="w-3.5 h-3.5 fill-current" />
-                          <span>DOOM RATIO: {article.doomRating}/5</span>
-                        </div>
-                      </div>
-
-                      {/* Headline */}
-                      <h3 className="font-comic text-2xl text-white tracking-wide leading-tight group-hover:text-emerald-400 transition-colors uppercase">
-                        {article.title}
-                      </h3>
-
-                      {/* Subtitle / Quote intro */}
-                      <p className="font-sans font-bold text-xs text-rose-500 mt-1 uppercase tracking-wider">
-                        {article.subtitle}
-                      </p>
-
-                      {/* Excerpt */}
-                      <p className="text-stone-300 text-xs mt-3 leading-relaxed font-sans line-clamp-3">
-                        {article.excerpt}
-                      </p>
+            {filteredArticles.map((article, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <motion.div
+                  key={article.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-stone-950 border-4 border-black p-5 shadow-comic flex flex-col justify-between hover:scale-[1.01] transition-transform relative group overflow-hidden"
+                >
+                  {/* Decorative corner tag */}
+                  <div className={`absolute top-0 right-0 w-8 h-8 ${isEven ? 'bg-red-600' : 'bg-emerald-700'} border-b-2 border-l-2 border-black rotate-45 translate-x-4 -translate-y-4`} />
+                  
+                  <div>
+                    {/* Header: Date and category */}
+                    <div className="flex items-center justify-between mb-3 text-[10px] font-mono font-bold text-stone-400">
+                      <span className="bg-stone-900 border border-stone-800 px-2 py-0.5 uppercase flex items-center space-x-1">
+                        {article.category === 'game' && <Gamepad2 className="w-3 h-3 text-emerald-400" />}
+                        {article.category === 'comic' && <Book className="w-3 h-3 text-rose-500" />}
+                        {article.category === 'movie' && <Film className="w-3 h-3 text-red-500" />}
+                        <span>{article.category}</span>
+                      </span>
+                      <span>{article.publishDate}</span>
                     </div>
 
-                    {/* Read Button & Custom Rating graphic */}
-                    <div className="mt-6 pt-4 border-t-2 border-stone-800 flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-stone-500 font-bold uppercase">{article.readTime}</span>
-                      <button
-                        onClick={() => setSelectedArticle(article)}
-                        className="bg-emerald-800 group-hover:bg-rose-600 text-white font-comic text-sm uppercase py-1.5 px-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer tracking-wider"
-                      >
-                        READ DECREE →
-                      </button>
+                    {/* Comic Panel Cover Image representation */}
+                    <div className="relative border-2 border-black overflow-hidden mb-4 aspect-video shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                      <img
+                        src={article.imageUrl}
+                        alt={article.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter contrast-125"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black border border-white px-2 py-1 flex items-center space-x-1 font-comic text-yellow-400 text-sm tracking-wide">
+                        <Shield className="w-3.5 h-3.5 fill-current" />
+                        <span>DOOM RATIO: {article.doomRating}/5</span>
+                      </div>
                     </div>
-                  </motion.div>
-                );
-              })
-            )}
+
+                    {/* Headline */}
+                    <h3 className="font-comic text-2xl text-white tracking-wide leading-tight group-hover:text-emerald-400 transition-colors uppercase">
+                      {article.title}
+                    </h3>
+
+                    {/* Subtitle / Quote intro */}
+                    <p className="font-sans font-bold text-xs text-rose-500 mt-1 uppercase tracking-wider">
+                      {article.subtitle}
+                    </p>
+
+                    {/* Excerpt */}
+                    <p className="text-stone-300 text-xs mt-3 leading-relaxed font-sans line-clamp-3">
+                      {article.excerpt}
+                    </p>
+                  </div>
+
+                  {/* Read Button & Custom Rating graphic */}
+                  <div className="mt-6 pt-4 border-t-2 border-stone-800 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-stone-500 font-bold uppercase">{article.readTime}</span>
+                    <button
+                      onClick={() => setSelectedArticle(article)}
+                      className="bg-emerald-800 group-hover:bg-rose-600 text-white font-comic text-sm uppercase py-1.5 px-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer tracking-wider"
+                    >
+                      READ DECREE →
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
@@ -983,8 +639,14 @@ USING (true);`}
               <div className="p-6 sm:p-8 space-y-6">
                 
                 {/* Meta details column */}
-                <div className="flex flex-wrap items-center justify-between border-b border-stone-800 pb-4 text-xs font-mono text-stone-400">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 items-center justify-between border-b border-stone-800 pb-4 text-xs font-mono text-stone-400">
                   <span>CHRONICLED ON: {selectedArticle.publishDate}</span>
+                  {selectedArticle.authorName && (
+                    <span>SCRIBE: {selectedArticle.authorName}</span>
+                  )}
+                  {selectedArticle.geoRegion && (
+                    <span>REGION: {selectedArticle.geoRegion}</span>
+                  )}
                   <span>READ TIME: {selectedArticle.readTime}</span>
                 </div>
 
@@ -994,6 +656,23 @@ USING (true);`}
                     <p key={idx} className="mb-4">{paragraph}</p>
                   ))}
                 </div>
+
+                {/* Dynamic FAQs Accordion in comic design */}
+                {selectedArticle.faqs && selectedArticle.faqs.length > 0 && (
+                  <div className="border-4 border-black p-5 bg-stone-900 shadow-comic mt-6 font-mono">
+                    <h4 className="font-comic text-xl text-yellow-400 uppercase tracking-wider mb-4 border-b-2 border-black pb-2 animate-pulse">
+                      ⚔️ STATE RECORD: FREQUENTLY ASKED QUESTIONS
+                    </h4>
+                    <div className="space-y-4">
+                      {selectedArticle.faqs.map((faq, index) => (
+                        <div key={index} className="border border-stone-850 p-3 bg-stone-950 rounded-xs shadow-sm">
+                          <p className="text-xs font-bold text-rose-500 uppercase font-mono">Q: {faq.question}</p>
+                          <p className="text-xs text-stone-300 mt-1.5 leading-relaxed font-sans">A: {faq.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Sovereign Edict Box (The Doom Homage Verdict Section) */}
                 <div className="bg-stone-900 border-4 border-emerald-800 p-5 sm:p-6 shadow-comic relative mt-12 overflow-hidden">

@@ -1,3 +1,8 @@
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -12,6 +17,12 @@ export interface Article {
   doomVerdict: string; // Lord Doom's executive quote about it
   slug: string;
   featured?: boolean;
+  status?: 'published' | 'draft' | 'pending_review';
+  authorName?: string;
+  geoRegion?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  faqs?: FAQItem[];
 }
 
 export interface GuestbookEntry {
