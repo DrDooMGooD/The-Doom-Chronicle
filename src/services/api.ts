@@ -2,7 +2,12 @@ import { Article } from '../types';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 const getExpectedPasscode = () => {
-  return (import.meta as any).env.VITE_ADMIN_PASSPHRASE || 'Hackboy4711!';
+  try {
+    const env = (import.meta as any).env || {};
+    return env.VITE_ADMIN_PASSPHRASE || 'Hackboy4711!';
+  } catch {
+    return 'Hackboy4711!';
+  }
 };
 
 // Helper to convert DB keys (snake_case) to Frontend keys (camelCase)
