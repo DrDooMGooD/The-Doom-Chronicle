@@ -12,17 +12,35 @@ export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
   return data || [];
 }
 
-export async function triggerLucyBrainstorm(geminiApiKey: string): Promise<void> {
+export async function triggerLucyBrainstorm(geminiApiKey: string, searchQuery?: string): Promise<void> {
   const client = getSupabaseClient() as any;
   if (!client) throw new Error('Database client not initialized');
   if (!geminiApiKey) throw new Error('Gemini API key is required. Save it in the "Sovereign Keys" modal.');
 
-  const prompt = `You are a content strategist compiling review ideas for a high-profile retro/modern entertainment critique website.
-Generate 10 trending review topics across these three categories:
-- Video Games (recent releases or highly anticipated in 2025/2026)
-- Comic Books (major current reboot lines, events, or hot series)
-- Cinematic Film (blockbusters, critically acclaimed releases, or anticipated comic movies)
+  let prompt = '';
+  if (searchQuery) {
+    prompt = `You are a content strategist researching a specific entertainment event, title, or topic.
+Investigate the following request thoroughly using Google Search to fetch up-to-date details for the year 2026:
+Topic/Event: "${searchQuery}"
 
+Generate a single, highly detailed critique concept card based on your search findings. Include specific instructions on why this is relevant in 2026 and what key elements to analyze (e.g. results, announcements, story directions).
+
+You MUST respond with a raw JSON array containing exactly 1 object matching this schema. Do not add any backticks, markdown, or text outside the JSON array:
+[
+  {
+    "title": "A clean, descriptive review title covering this topic",
+    "category": "game" | "comic" | "movie",
+    "notes": "Detailed strategic critique notes (1-3 sentences max) based on your live search findings"
+  }
+]`;
+  } else {
+    prompt = `You are a content strategist compiling review ideas for a high-profile retro/modern entertainment critique website.
+Generate 10 trending review topics across these three categories:
+- Video Games (recent releases or highly anticipated in 2026)
+- Comic Books (major current reboot lines, events, or hot series in 2026)
+- Cinematic Film (blockbusters, critically acclaimed releases, or anticipated movies in 2026)
+
+Use Google Search to retrieve actual, current trends for the year 2026 so the suggestions are highly fresh, accurate, and relevant.
 For each topic, write short strategic critique guidelines or notes (maximum 2 sentences) explaining why it is popular and what aspects to analyze.
 
 You MUST respond with a raw JSON array matching this schema. Do not add any backticks, markdown, or text outside the JSON array:
@@ -33,6 +51,7 @@ You MUST respond with a raw JSON array matching this schema. Do not add any back
     "notes": "Concise critique notes (1-2 sentences max)"
   }
 ]`;
+  }
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
@@ -41,10 +60,10 @@ You MUST respond with a raw JSON array matching this schema. Do not add any back
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        tools: [{ google_search: {} }],
         generationConfig: {
-          responseMimeType: 'application/json',
           maxOutputTokens: 3000,
-          temperature: 0.8,
+          temperature: 0.7,
         },
       }),
     }

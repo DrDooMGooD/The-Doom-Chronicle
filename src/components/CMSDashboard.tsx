@@ -37,6 +37,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [corpusEntries, setCorpusEntries] = useState<CorpusItem[]>([]);
   const [isLucyRunning, setIsLucyRunning] = useState(false);
   const [arthurPublishingId, setArthurPublishingId] = useState<string | null>(null);
+  const [lucySearchQuery, setLucySearchQuery] = useState('');
 
   // Manual Upload & Edit states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -182,17 +183,23 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     }
   };
 
-  const handleLucyBrainstorm = async () => {
+  const handleLucyBrainstorm = async (queryOverride?: string) => {
     const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
     if (!key) {
       alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
       return;
     }
+    const query = queryOverride || lucySearchQuery;
     setIsLucyRunning(true);
     try {
-      await triggerLucyBrainstorm(key);
+      await triggerLucyBrainstorm(key, query.trim() || undefined);
       await reloadCorpus();
-      alert('🔮 LUCY: Content strategy backlog populated with 10 trending review topics!');
+      if (query.trim()) {
+        alert(`🔮 LUCY: Finished researching "${query.trim()}". Clean concept card successfully added to your backlog ledger!`);
+        setLucySearchQuery('');
+      } else {
+        alert('🔮 LUCY: Content strategy backlog populated with 10 trending review topics!');
+      }
     } catch (err: any) {
       alert(`Lucy Strategy Compilation Failed: ${err.message}`);
     } finally {
@@ -681,35 +688,72 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
               {activeTab === 'corpus' && (
                 <div className="space-y-6">
                   {/* Strategic Lucy trigger controller */}
-                  <div className="bg-stone-900 border-3 border-black p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-comic">
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Terminal className="w-5 h-5 text-rose-500 animate-pulse" />
-                        <span className="font-comic text-lg uppercase tracking-wide text-white">Sovereign Planning Bureau</span>
+                  <div className="bg-stone-900 border-3 border-black p-5 space-y-4 shadow-comic">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <Terminal className="w-5 h-5 text-rose-500 animate-pulse" />
+                          <span className="font-comic text-lg uppercase tracking-wide text-white">Sovereign Planning Bureau</span>
+                        </div>
+                        <p className="text-stone-400 text-xs leading-relaxed max-w-2xl font-sans normal-case">
+                          Coordinate with **Lucy** to search the web using 2026 Google Grounding. Ask her to compile general trends or investigate specific upcoming releases and events!
+                        </p>
                       </div>
-                      <p className="text-stone-400 text-xs leading-relaxed max-w-2xl font-sans normal-case">
-                        Coordinate with your content co-pilot **Lucy** to autonomously scan global entertainment metrics and populate the backlog with 10 high-value, trending critique directions.
-                      </p>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={isLucyRunning}
-                      onClick={handleLucyBrainstorm}
-                      className="w-full md:w-auto bg-rose-700 hover:bg-rose-650 text-white font-bold text-xs uppercase px-5 py-3 border border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50"
-                    >
-                      {isLucyRunning ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                          <span>LUCY IS BRAINSTORMING...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Settings className="w-4 h-4 shrink-0" />
-                          <span>🔮 Auto-Compile Trends (Lucy)</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-end gap-3 border-t border-stone-850 pt-4">
+                      {/* Investigation Input query */}
+                      <div className="flex-1 w-full text-left">
+                        <label className="block text-[9px] text-stone-500 font-bold mb-1">🔍 TARGET SPECIFIC EVENT OR TITLE TO RESEARCH</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. EVO Las Vegas 2026, Marvel Absolute Power, Joker 2 reviews..."
+                          value={lucySearchQuery}
+                          onChange={(e) => setLucySearchQuery(e.target.value)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 px-3 py-2.5 text-xs focus:outline-hidden focus:border-rose-600 placeholder:text-stone-700"
+                        />
+                      </div>
+
+                      <div className="flex flex-col xs:flex-row items-stretch gap-2.5 w-full sm:w-auto pt-4 sm:pt-0">
+                        {/* Investigate Query Button */}
+                        <button
+                          type="button"
+                          disabled={isLucyRunning || !lucySearchQuery.trim()}
+                          onClick={() => handleLucyBrainstorm(lucySearchQuery)}
+                          className="bg-rose-700 hover:bg-rose-650 disabled:bg-stone-900 disabled:text-stone-600 text-white font-bold text-xs uppercase px-4 py-3.5 border border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-1.5 disabled:shadow-none disabled:cursor-not-allowed shrink-0"
+                        >
+                          {isLucyRunning && lucySearchQuery.trim() ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                              <span>Researching...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>🔍 Investigate</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Compile 10 General Trends Button */}
+                        <button
+                          type="button"
+                          disabled={isLucyRunning}
+                          onClick={() => handleLucyBrainstorm('')}
+                          className="bg-stone-950 hover:bg-stone-800 border border-stone-800 hover:border-black text-stone-300 hover:text-white font-bold text-xs uppercase px-4 py-3.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50 shrink-0"
+                        >
+                          {isLucyRunning && !lucySearchQuery.trim() ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-stone-300 border-t-transparent rounded-full animate-spin shrink-0" />
+                              <span>Brainstorming 10...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>🔮 Compile 10 Trends</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {corpusEntries.length === 0 ? (
