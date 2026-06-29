@@ -29,11 +29,14 @@ export interface Article {
 export interface GuestbookEntry {
   id: string;
   name: string;
+  email?: string;
+  newsletter?: boolean;
   allegiance: 'loyalist' | 'rebel' | 'doombot' | 'foreigner';
   country: string;
   tribute: string;
   timestamp: string;
   acceptedByDoom: boolean;
+  response?: string;
 }
 
 export interface DoomQuote {

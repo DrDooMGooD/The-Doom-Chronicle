@@ -1,35 +1,40 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PenTool, Shield, User, Globe, ThumbsUp, AlertCircle, Trash2, CheckCircle } from 'lucide-react';
+import { PenTool, Shield, User, Globe, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { GuestbookEntry } from '../types';
-import { initialGuestbook } from '../data';
+import { fetchRegistryEntries, submitRegistryEntry } from '../services/api';
 
 export default function LatverianGuestbook() {
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [newsletter, setNewsletter] = useState(false);
   const [allegiance, setAllegiance] = useState<'loyalist' | 'rebel' | 'doombot' | 'foreigner'>('loyalist');
   const [country, setCountry] = useState('Latveria');
   const [tribute, setTribute] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'warn' | null, message: string }>({ type: null, message: '' });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize and load guestbook
+  const loadEntries = () => {
+    fetchRegistryEntries()
+      .then(setEntries)
+      .catch(err => console.warn('Could not load Latverian Registry entries:', err));
+  };
+
   useEffect(() => {
-    const saved = localStorage.getItem('latveria_registry_entries');
-    if (saved) {
-      try {
-        setEntries(JSON.parse(saved));
-      } catch (e) {
-        setEntries(initialGuestbook);
-      }
-    } else {
-      setEntries(initialGuestbook);
-      localStorage.setItem('latveria_registry_entries', JSON.stringify(initialGuestbook));
-    }
+    loadEntries();
   }, []);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tribute.trim()) return;
+
+    if (newsletter && !email.trim()) {
+      setNotification({ type: 'warn', message: 'If you register for the newsletter, you must supply your royal communication address (email).' });
+      setTimeout(() => setNotification({ type: null, message: '' }), 4000);
+      return;
+    }
 
     let finalName = name;
     let accepted = true;
@@ -50,31 +55,35 @@ export default function LatverianGuestbook() {
       return;
     }
 
-    const newEntry: GuestbookEntry = {
-      id: `g-${Date.now()}`,
-      name: finalName,
-      allegiance,
-      country,
-      tribute,
-      timestamp: new Date().toISOString(),
-      acceptedByDoom: true
-    };
+    setIsLoading(true);
+    try {
+      const newEntry: Partial<GuestbookEntry> = {
+        name: finalName,
+        email: email || undefined,
+        newsletter,
+        allegiance,
+        country,
+        tribute,
+        acceptedByDoom: true
+      };
 
-    const updated = [newEntry, ...entries];
-    setEntries(updated);
-    localStorage.setItem('latveria_registry_entries', JSON.stringify(updated));
-
-    // Reset inputs
-    setName('');
-    setTribute('');
-    
-    setNotification({ type: 'success', message: 'Tribute received by the Castle Scribes! Your loyalty has been registered.' });
-    setTimeout(() => setNotification({ type: null, message: '' }), 4000);
-  };
-
-  const clearEntries = () => {
-    localStorage.setItem('latveria_registry_entries', JSON.stringify(initialGuestbook));
-    setEntries(initialGuestbook);
+      await submitRegistryEntry(newEntry);
+      
+      // Reset inputs
+      setName('');
+      setEmail('');
+      setNewsletter(false);
+      setTribute('');
+      
+      setNotification({ type: 'success', message: 'Tribute received by the Castle Scribes! Your loyalty has been registered.' });
+      setTimeout(() => setNotification({ type: null, message: '' }), 4000);
+      loadEntries();
+    } catch (err: any) {
+      setNotification({ type: 'warn', message: `Database error: ${err.message}` });
+      setTimeout(() => setNotification({ type: null, message: '' }), 5000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -155,12 +164,39 @@ export default function LatverianGuestbook() {
                 <label className="block text-stone-400 font-bold uppercase mb-1">STATEMENT OF TRIBUTE / PRAISE</label>
                 <textarea
                   required
-                  rows={4}
+                  rows={3}
                   placeholder="Express your supreme loyalty or state of admiration..."
                   value={tribute}
                   onChange={(e) => setTribute(e.target.value)}
-                  className="w-full bg-stone-900 text-white border-2 border-black px-4 py-2.5 focus:outline-hidden focus:border-red-600"
+                  className="w-full bg-stone-900 text-white border-2 border-black px-4 py-2.5 focus:outline-hidden focus:border-red-650"
                 />
+              </div>
+
+              {/* Email and Newsletter block */}
+              <div className="border border-stone-850 p-3 bg-stone-900/30 space-y-3">
+                <div>
+                  <label className="block text-stone-400 font-bold uppercase mb-1">EMAIL ADDRESS (OPTIONAL)</label>
+                  <div className="relative flex items-center">
+                    <Mail className="absolute left-3 w-4 h-4 text-stone-500 font-bold" />
+                    <input
+                      type="email"
+                      placeholder="e.g. citizen@latveria.gov"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-stone-900 text-white border-2 border-black pl-10 pr-4 py-2 focus:outline-hidden focus:border-red-650"
+                    />
+                  </div>
+                </div>
+                
+                <label className="flex items-center space-x-2 text-[10px] text-stone-300 font-bold cursor-pointer uppercase select-none">
+                  <input
+                    type="checkbox"
+                    checked={newsletter}
+                    onChange={(e) => setNewsletter(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer border-2 border-black"
+                  />
+                  <span>RECEIVE ROYAL PROCLAMATIONS VIA EMAIL (NEWSLETTER)</span>
+                </label>
               </div>
 
               <div className="pt-2">
@@ -211,13 +247,6 @@ export default function LatverianGuestbook() {
                   <Shield className="w-5 h-5 text-emerald-500" />
                   <span className="font-comic text-2xl text-white uppercase tracking-wider">SECURE GENERAL ROLL</span>
                 </div>
-                <button
-                  onClick={clearEntries}
-                  className="font-mono text-[10px] text-red-500 font-bold uppercase hover:underline cursor-pointer flex items-center space-x-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>RESET ROLL</span>
-                </button>
               </div>
 
               {/* Feed items */}
@@ -254,6 +283,15 @@ export default function LatverianGuestbook() {
                       <p className="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed italic border-l-2 border-red-500 pl-3 bg-stone-950/40 py-1.5">
                         "{entry.tribute}"
                       </p>
+
+                      {entry.response && (
+                        <div className="mt-3 bg-emerald-950/20 border-l-4 border-emerald-600 p-3 text-xs sm:text-sm text-emerald-400 italic font-medium relative font-sans">
+                          <span className="absolute -top-2 right-2 bg-emerald-700 text-black text-[8px] font-bold px-1.5 py-0.5 border border-black uppercase font-mono shadow-[1px_1px_0px_rgba(0,0,0,1)] tracking-wider">
+                            👑 SOVEREIGN REPLY
+                          </span>
+                          <span>"{entry.response}"</span>
+                        </div>
+                      )}
 
                       <div className="mt-2 text-[9px] font-mono text-stone-500 flex justify-between items-center">
                         <span>TIMESTAMP SECURE: {new Date(entry.timestamp).toLocaleDateString()}</span>

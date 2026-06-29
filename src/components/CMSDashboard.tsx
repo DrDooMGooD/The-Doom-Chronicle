@@ -3,10 +3,14 @@ import { motion } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff 
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail 
 } from 'lucide-react';
 import { Article } from '../types';
-import { fetchAdminArticles, updateArticle, deleteArticle, createArticle } from '../services/api';
+import { 
+  fetchAdminArticles, updateArticle, deleteArticle, createArticle,
+  fetchRegistryEntries, respondToRegistryEntry, deleteRegistryEntry 
+} from '../services/api';
+import { GuestbookEntry } from '../types';
 
 interface CMSDashboardProps {
   onClose: () => void;
@@ -21,7 +25,11 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry'>('pending');
+
+  // Registry ledger states
+  const [registryEntries, setRegistryEntries] = useState<GuestbookEntry[]>([]);
+  const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
   // Manual Upload & Edit states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -67,6 +75,15 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     try {
       const data = await fetchAdminArticles(passcode);
       setArticles(data);
+      const registryData = await fetchRegistryEntries();
+      setRegistryEntries(registryData);
+      
+      const initialReplies: Record<string, string> = {};
+      registryData.forEach(e => {
+        if (e.response) initialReplies[e.id] = e.response;
+      });
+      setReplyTexts(initialReplies);
+
       setIsAuthorized(true);
       localStorage.setItem('castle_passcode', passcode);
     } catch (err: any) {
@@ -83,6 +100,8 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     try {
       const data = await fetchAdminArticles(passcode);
       setArticles(data);
+      const registryData = await fetchRegistryEntries();
+      setRegistryEntries(registryData);
       setError(null);
     } catch (err: any) {
       setError('Connection interrupted. Resync required.');
@@ -109,6 +128,37 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       await reloadArticles();
     } catch (err: any) {
       alert(err.message || 'Failed to incinerate scroll');
+    }
+  };
+
+  const handleSendReply = async (id: string) => {
+    const replyText = replyTexts[id] || '';
+    if (!replyText.trim()) return;
+    try {
+      setIsLoading(true);
+      const updated = await respondToRegistryEntry(id, replyText, passcode);
+      setRegistryEntries(prev => prev.map(e => e.id === id ? updated : e));
+      alert('Sovereign response successfully dicted!');
+    } catch (err: any) {
+      alert(`Failed to reply: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteRegistry = async (id: string) => {
+    if (!window.confirm('Are you sure you want to incinerate this subject\'s signature from the state records?')) {
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await deleteRegistryEntry(id, passcode);
+      setRegistryEntries(prev => prev.filter(e => e.id !== id));
+      alert('Signature incinerated.');
+    } catch (err: any) {
+      alert(`Failed to delete: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -349,11 +399,12 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
         )}
 
         {/* Tab Selection */}
-        <div className="flex border-b-4 border-black mb-6">
+        <div className="flex border-b-4 border-black mb-6 overflow-x-auto whitespace-nowrap">
           {[
             { id: 'pending', label: 'Pending Review', count: pendingArticles.length, color: 'border-yellow-500 text-yellow-400' },
             { id: 'published', label: 'Published ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
-            { id: 'draft', label: 'Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' }
+            { id: 'draft', label: 'Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
+            { id: 'registry', label: 'Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -397,10 +448,113 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                 </div>
               )}
 
+              {activeTab === 'registry' && registryEntries.length === 0 && (
+                <div className="text-center py-16 border border-stone-800 bg-stone-950">
+                  <BookOpen className="w-12 h-12 text-stone-700 mx-auto mb-4" />
+                  <p className="text-xs text-stone-500 font-bold uppercase">No signatures on the Latverian Registry ledger.</p>
+                </div>
+              )}
+
+              {activeTab === 'registry' && registryEntries.length > 0 && (
+                <div className="space-y-4">
+                  {registryEntries.map((entry) => {
+                    const replyVal = replyTexts[entry.id] || '';
+                    return (
+                      <div key={entry.id} className="bg-stone-950 border border-stone-800 p-5 relative shadow-comic uppercase font-mono text-xs">
+                        {/* Allegiance Tag */}
+                        <span className={`absolute -top-3 right-4 border border-black text-[9px] font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase ${
+                          entry.allegiance === 'loyalist'
+                            ? 'bg-emerald-700 text-white'
+                            : entry.allegiance === 'doombot'
+                            ? 'bg-stone-800 text-stone-400'
+                            : 'bg-red-650 text-white'
+                        }`}>
+                          {entry.allegiance}
+                        </span>
+
+                        <div className="flex flex-wrap items-center justify-between border-b border-stone-850 pb-2 mb-3 gap-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-comic text-base text-emerald-400 tracking-wide">{entry.name}</span>
+                            <span className="text-[10px] text-stone-500 font-sans normal-case">OF {entry.country}</span>
+                          </div>
+                          <span className="text-[9px] text-stone-600">DATE: {new Date(entry.timestamp).toLocaleDateString()}</span>
+                        </div>
+
+                        {/* Tribute Content */}
+                        <div className="bg-stone-900/40 border-l-2 border-red-500 pl-3 py-2 text-stone-300 italic mb-4 normal-case font-sans text-sm font-medium leading-relaxed">
+                          "{entry.tribute}"
+                        </div>
+
+                        {/* Newsletter & Email Info */}
+                        <div className="flex flex-wrap items-center gap-3 mb-4 text-[10px]">
+                          {entry.email ? (
+                            <div className="flex items-center space-x-1.5 bg-stone-900 border border-stone-850 px-2.5 py-1 rounded-sm text-stone-400">
+                              <Mail className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="lowercase font-bold select-all">{entry.email}</span>
+                            </div>
+                          ) : (
+                            <div className="bg-stone-900/30 text-stone-600 border border-stone-900 px-2.5 py-1 rounded-sm italic">
+                              NO EMAIL REGISTERED
+                            </div>
+                          )}
+
+                          {entry.newsletter ? (
+                            <span className="bg-emerald-950 border border-emerald-900 text-emerald-500 px-2 py-1 rounded-sm font-bold">
+                              ✓ NEWSLETTER SIGN-UP ACTIVE
+                            </span>
+                          ) : (
+                            <span className="bg-stone-900/30 text-stone-600 border border-stone-900 px-2 py-1 rounded-sm">
+                              NO NEWSLETTER INTEREST
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Doom reply block */}
+                        <div className="border-t border-stone-850 pt-3 flex flex-col md:flex-row md:items-center gap-3">
+                          <div className="flex-1">
+                            <label className="block text-[9px] text-stone-500 font-bold mb-1">👑 DICTATE SOVEREIGN REPLY</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Your loyalty is noted, subject. Return to your fields."
+                              value={replyVal}
+                              onChange={(e) => setReplyTexts(prev => ({ ...prev, [entry.id]: e.target.value }))}
+                              className="w-full bg-stone-900 text-white border border-stone-850 px-3 py-2 text-xs focus:outline-hidden focus:border-emerald-600 placeholder:text-stone-700"
+                            />
+                          </div>
+
+                          <div className="flex items-end space-x-2 mt-4 md:mt-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSendReply(entry.id);
+                              }}
+                              className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase px-4 py-2 border border-black shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-1"
+                            >
+                              <Check className="w-3.5 h-3.5 shrink-0" />
+                              <span>{entry.response ? 'Update' : 'Reply'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRegistry(entry.id)}
+                              className="bg-stone-900 border border-stone-700 hover:bg-red-700 hover:text-white hover:border-black font-bold text-xs uppercase px-4 py-2 flex items-center space-x-1 transition-colors cursor-pointer text-stone-400"
+                            >
+                              <Trash className="w-3.5 h-3.5 shrink-0" />
+                              <span>Incinerate</span>
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Articles table list */}
               {((activeTab === 'pending' && pendingArticles.length > 0) ||
                 (activeTab === 'published' && publishedArticles.length > 0) ||
-                (activeTab === 'draft' && draftArticles.length > 0)) && (
+                (activeTab === 'draft' && draftArticles.length > 0)) && activeTab !== 'registry' && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs uppercase font-mono border-collapse">
                     <thead>

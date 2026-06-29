@@ -1,4 +1,4 @@
-import { Article } from '../types';
+import { Article, GuestbookEntry } from '../types';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
 const getExpectedPasscode = () => {
@@ -192,4 +192,95 @@ export async function submitProposal(proposal: {
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) throw new Error('No data returned from submitProposal');
   return dbToApp(data[0]);
+}
+
+// Guestbook mapping helpers
+function dbToGuestbook(row: any): GuestbookEntry {
+  return {
+    id: String(row.id),
+    name: String(row.name || ''),
+    email: row.email ? String(row.email) : undefined,
+    newsletter: Boolean(row.newsletter),
+    allegiance: (row.allegiance || 'loyalist') as 'loyalist' | 'rebel' | 'doombot' | 'foreigner',
+    country: String(row.country || 'Latveria'),
+    tribute: String(row.tribute || ''),
+    response: row.response ? String(row.response) : undefined,
+    acceptedByDoom: Boolean(row.accepted_by_doom),
+    timestamp: String(row.created_at || new Date().toISOString())
+  };
+}
+
+function guestbookToDb(entry: Partial<GuestbookEntry>) {
+  const payload: any = {};
+  if (entry.id !== undefined) payload.id = entry.id;
+  if (entry.name !== undefined) payload.name = entry.name;
+  if (entry.email !== undefined) payload.email = entry.email;
+  if (entry.newsletter !== undefined) payload.newsletter = entry.newsletter;
+  if (entry.allegiance !== undefined) payload.allegiance = entry.allegiance;
+  if (entry.country !== undefined) payload.country = entry.country;
+  if (entry.tribute !== undefined) payload.tribute = entry.tribute;
+  if (entry.response !== undefined) payload.response = entry.response;
+  if (entry.acceptedByDoom !== undefined) payload.accepted_by_doom = entry.acceptedByDoom;
+  return payload;
+}
+
+// Guestbook DB integrations
+export async function fetchRegistryEntries(): Promise<GuestbookEntry[]> {
+  const client = getSupabaseClient() as any;
+  if (!client) return [];
+  const { data, error } = await client
+    .from('registry')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []).map(dbToGuestbook);
+}
+
+export async function submitRegistryEntry(entry: Partial<GuestbookEntry>): Promise<GuestbookEntry> {
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+
+  const id = entry.id || `reg-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const dbPayload = guestbookToDb({ ...entry, id });
+  const { data, error } = await client
+    .from('registry')
+    .insert([dbPayload])
+    .select('*');
+
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error('No data returned from submitRegistryEntry');
+  return dbToGuestbook(data[0]);
+}
+
+export async function respondToRegistryEntry(id: string, responseText: string, passcode: string): Promise<GuestbookEntry> {
+  if (passcode !== getExpectedPasscode()) {
+    throw new Error('ACCESS DENIED: Unauthorized Passcode');
+  }
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+
+  const { data, error } = await client
+    .from('registry')
+    .update({ response: responseText })
+    .eq('id', id)
+    .select('*');
+
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error('No data returned from respondToRegistryEntry');
+  return dbToGuestbook(data[0]);
+}
+
+export async function deleteRegistryEntry(id: string, passcode: string): Promise<void> {
+  if (passcode !== getExpectedPasscode()) {
+    throw new Error('ACCESS DENIED: Unauthorized Passcode');
+  }
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+
+  const { error } = await client
+    .from('registry')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
 }
