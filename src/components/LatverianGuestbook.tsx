@@ -4,6 +4,58 @@ import { PenTool, Shield, User, Globe, AlertCircle, CheckCircle, Mail } from 'lu
 import { GuestbookEntry } from '../types';
 import { fetchRegistryEntries, submitRegistryEntry } from '../services/api';
 
+const containsProfanity = (text: string): boolean => {
+  const badWordsConfig = [
+    { word: 'fuck', strictEnd: false },
+    { word: 'shit', strictEnd: false },
+    { word: 'bitch', strictEnd: false },
+    { word: 'cunt', strictEnd: false },
+    { word: 'asshole', strictEnd: false },
+    { word: 'pussy', strictEnd: false },
+    { word: 'bastard', strictEnd: false },
+    { word: 'faggot', strictEnd: false },
+    { word: 'nigger', strictEnd: false },
+    { word: 'kike', strictEnd: false },
+    { word: 'retard', strictEnd: false },
+    { word: 'whore', strictEnd: false },
+    { word: 'slut', strictEnd: false },
+    { word: 'motherfucker', strictEnd: false },
+    { word: 'twat', strictEnd: false },
+    { word: 'wanker', strictEnd: false },
+    { word: 'chink', strictEnd: false },
+    { word: 'dyke', strictEnd: false },
+    { word: 'prick', strictEnd: false },
+    { word: 'ass', strictEnd: true },
+    { word: 'cock', strictEnd: true },
+    { word: 'cum', strictEnd: true }
+  ];
+
+  const leetMap: Record<string, string> = {
+    'a': '[a@4]',
+    'e': '[e3]',
+    'i': '[i1!l]',
+    'o': '[o0]',
+    's': '[s5$]',
+    't': '[t7]'
+  };
+
+  const cleanedText = text.toLowerCase().trim();
+
+  for (const item of badWordsConfig) {
+    const pattern = item.word
+      .split('')
+      .map(char => leetMap[char] || char)
+      .join('[\\s_\\-*.]*');
+    
+    const regex = new RegExp('\\b' + pattern + (item.strictEnd ? '\\b' : ''), 'i');
+    if (regex.test(cleanedText)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export default function LatverianGuestbook() {
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [name, setName] = useState('');
@@ -29,6 +81,15 @@ export default function LatverianGuestbook() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tribute.trim()) return;
+
+    if (containsProfanity(name) || containsProfanity(tribute) || containsProfanity(email) || containsProfanity(country)) {
+      setNotification({
+        type: 'warn',
+        message: '⚔️ CENSOR PROTOCOL ENGAGED: Insolent subject! Lord Doom does not permit such uncouth and vulgar vocabulary on the records of Latveria. Mind your tongue or face instant incinerator protocols!'
+      });
+      setTimeout(() => setNotification({ type: null, message: '' }), 6500);
+      return;
+    }
 
     if (newsletter && !email.trim()) {
       setNotification({ type: 'warn', message: 'If you register for the newsletter, you must supply your royal communication address (email).' });
