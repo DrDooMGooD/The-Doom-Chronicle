@@ -150,7 +150,7 @@ async function main() {
         doom_rating: Number(draft.doomRating) || 4.5,
         doom_verdict: draft.doomVerdict || 'Doom approves.',
         slug,
-        status: 'published',
+        status: 'pending_review',
         author_name: 'Dr. Doom',
         geo_region: 'Latveria',
         faqs: draft.faqs || []
