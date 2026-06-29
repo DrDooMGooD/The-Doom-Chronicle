@@ -5,12 +5,14 @@ import {
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
   AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail 
 } from 'lucide-react';
-import { Article } from '../types';
+import { Article, GuestbookEntry, CorpusItem } from '../types';
 import { 
   fetchAdminArticles, updateArticle, deleteArticle, createArticle,
   fetchRegistryEntries, respondToRegistryEntry, deleteRegistryEntry 
 } from '../services/api';
-import { GuestbookEntry } from '../types';
+import { 
+  fetchCorpusEntries, triggerLucyBrainstorm, triggerArthurPublish 
+} from '../services/agentService';
 
 interface CMSDashboardProps {
   onClose: () => void;
@@ -25,11 +27,16 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry' | 'corpus'>('pending');
 
   // Registry ledger states
   const [registryEntries, setRegistryEntries] = useState<GuestbookEntry[]>([]);
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+
+  // Corpus planning backlog states
+  const [corpusEntries, setCorpusEntries] = useState<CorpusItem[]>([]);
+  const [isLucyRunning, setIsLucyRunning] = useState(false);
+  const [arthurPublishingId, setArthurPublishingId] = useState<string | null>(null);
 
   // Manual Upload & Edit states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -78,6 +85,9 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       const registryData = await fetchRegistryEntries();
       setRegistryEntries(registryData);
       
+      const corpusData = await fetchCorpusEntries();
+      setCorpusEntries(corpusData);
+      
       const initialReplies: Record<string, string> = {};
       registryData.forEach(e => {
         if (e.response) initialReplies[e.id] = e.response;
@@ -95,6 +105,15 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     }
   };
 
+  const reloadCorpus = async () => {
+    try {
+      const corpusData = await fetchCorpusEntries();
+      setCorpusEntries(corpusData);
+    } catch (err) {
+      console.error('Failed to reload content corpus:', err);
+    }
+  };
+
   const reloadArticles = async () => {
     setIsLoading(true);
     try {
@@ -102,6 +121,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       setArticles(data);
       const registryData = await fetchRegistryEntries();
       setRegistryEntries(registryData);
+      await reloadCorpus();
       setError(null);
     } catch (err: any) {
       setError('Connection interrupted. Resync required.');
@@ -159,6 +179,45 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       alert(`Failed to delete: ${err.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLucyBrainstorm = async () => {
+    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    if (!key) {
+      alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
+      return;
+    }
+    setIsLucyRunning(true);
+    try {
+      await triggerLucyBrainstorm(key);
+      await reloadCorpus();
+      alert('🔮 LUCY: Content strategy backlog populated with 10 trending review topics!');
+    } catch (err: any) {
+      alert(`Lucy Strategy Compilation Failed: ${err.message}`);
+    } finally {
+      setIsLucyRunning(false);
+    }
+  };
+
+  const handleArthurPublish = async (item: CorpusItem) => {
+    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    if (!key) {
+      alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
+      return;
+    }
+    setArthurPublishingId(item.id);
+    setCorpusEntries(prev => prev.map(c => c.id === item.id ? { ...c, status: 'in_progress' } : c));
+    try {
+      const liveUrl = await triggerArthurPublish(item, key);
+      await reloadArticles();
+      await reloadCorpus();
+      alert(`🤖 ARTHUR: Generated review draft, pushed it live to your site, and recorded URL!\n\nReview: "${item.title}"`);
+    } catch (err: any) {
+      alert(`Arthur Auto-Publish Failed: ${err.message}`);
+      await reloadCorpus();
+    } finally {
+      setArthurPublishingId(null);
     }
   };
 
@@ -404,7 +463,8 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
             { id: 'pending', label: 'Pending Review', count: pendingArticles.length, color: 'border-yellow-500 text-yellow-400' },
             { id: 'published', label: 'Published ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
             { id: 'draft', label: 'Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
-            { id: 'registry', label: 'Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' }
+            { id: 'registry', label: 'Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' },
+            { id: 'corpus', label: '🎯 Strategy Corpus', count: corpusEntries.length, color: 'border-rose-500 text-rose-450' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -554,7 +614,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
               {/* Articles table list */}
               {((activeTab === 'pending' && pendingArticles.length > 0) ||
                 (activeTab === 'published' && publishedArticles.length > 0) ||
-                (activeTab === 'draft' && draftArticles.length > 0)) && activeTab !== 'registry' && (
+                (activeTab === 'draft' && draftArticles.length > 0)) && activeTab !== 'registry' && activeTab !== 'corpus' && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs uppercase font-mono border-collapse">
                     <thead>
@@ -614,6 +674,136 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* 🎯 Content Strategy Corpus Backlog Ledger */}
+              {activeTab === 'corpus' && (
+                <div className="space-y-6">
+                  {/* Strategic Lucy trigger controller */}
+                  <div className="bg-stone-900 border-3 border-black p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-comic">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Terminal className="w-5 h-5 text-rose-500 animate-pulse" />
+                        <span className="font-comic text-lg uppercase tracking-wide text-white">Sovereign Planning Bureau</span>
+                      </div>
+                      <p className="text-stone-400 text-xs leading-relaxed max-w-2xl font-sans normal-case">
+                        Coordinate with your content co-pilot **Lucy** to autonomously scan global entertainment metrics and populate the backlog with 10 high-value, trending critique directions.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isLucyRunning}
+                      onClick={handleLucyBrainstorm}
+                      className="w-full md:w-auto bg-rose-700 hover:bg-rose-650 text-white font-bold text-xs uppercase px-5 py-3 border border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50"
+                    >
+                      {isLucyRunning ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                          <span>LUCY IS BRAINSTORMING...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="w-4 h-4 shrink-0" />
+                          <span>🔮 Auto-Compile Trends (Lucy)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {corpusEntries.length === 0 ? (
+                    <div className="text-center py-16 border border-stone-800 bg-stone-950">
+                      <BookOpen className="w-12 h-12 text-stone-700 mx-auto mb-4" />
+                      <p className="text-xs text-stone-500 font-bold uppercase">No planning items found. Click the button above to trigger Lucy!</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {corpusEntries.map((item) => {
+                        const isPublishing = arthurPublishingId === item.id;
+                        return (
+                          <div key={item.id} className="bg-stone-950 border border-stone-800 p-5 relative shadow-comic flex flex-col justify-between uppercase font-mono text-xs">
+                            
+                            {/* Category Tag */}
+                            <span className="absolute -top-3 right-4 border border-black text-[9px] font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase bg-stone-900 text-stone-300">
+                              {item.category === 'game' ? '🎮 GAME' : item.category === 'comic' ? '📚 COMIC' : '🎬 MOVIE'}
+                            </span>
+
+                            <div className="space-y-3 mb-5">
+                              <h4 className="font-comic text-base text-emerald-400 tracking-wide leading-tight mt-1">{item.title}</h4>
+                              
+                              {item.notes && (
+                                <p className="text-stone-300 text-xs font-sans normal-case bg-stone-900/50 border-l border-emerald-700 pl-2.5 py-1 leading-relaxed">
+                                  {item.notes}
+                                </p>
+                              )}
+
+                              <div className="flex items-center space-x-2 text-[10px] text-stone-500">
+                                <span>STATUS:</span>
+                                <span className={`font-bold px-1.5 py-0.5 rounded-xs border ${
+                                  item.status === 'published'
+                                    ? 'bg-emerald-950/40 border-emerald-900 text-emerald-500'
+                                    : item.status === 'in_progress'
+                                    ? 'bg-yellow-950/40 border-yellow-900 text-yellow-500 animate-pulse'
+                                    : 'bg-stone-900 border-stone-800 text-stone-400'
+                                }`}>
+                                  {item.status.replace('_', ' ')}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions block */}
+                            <div className="border-t border-stone-900 pt-3 flex items-center justify-between gap-2 mt-auto">
+                              <span className="text-[9px] text-stone-600">DATE PLANNED: {new Date(item.created_at || Date.now()).toLocaleDateString()}</span>
+                              
+                              {item.status === 'backlog' && (
+                                <button
+                                  type="button"
+                                  disabled={arthurPublishingId !== null}
+                                  onClick={() => handleArthurPublish(item)}
+                                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase px-3 py-1.5 border border-black shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
+                                >
+                                  {isPublishing ? (
+                                    <>
+                                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                                      <span>ARTHUR DRAFTING...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Globe className="w-3.5 h-3.5 shrink-0" />
+                                      <span>🤖 Auto-Publish</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+
+                              {item.status === 'in_progress' && (
+                                <span className="text-yellow-500 font-bold flex items-center space-x-1 text-[10px]">
+                                  <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping shrink-0" />
+                                  <span>Automator Engaged</span>
+                                </span>
+                              )}
+
+                              {item.status === 'published' && (
+                                <a
+                                  href={item.published_url || '#reviews'}
+                                  onClick={(e) => {
+                                    if (!item.published_url) e.preventDefault();
+                                    onClose();
+                                  }}
+                                  className="bg-stone-900 border border-stone-850 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-3 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                                  <span>View Live Review</span>
+                                </a>
+                              )}
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </>

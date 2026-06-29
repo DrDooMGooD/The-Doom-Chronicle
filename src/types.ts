@@ -44,3 +44,13 @@ export interface DoomQuote {
   quote: string;
   context: string;
 }
+
+export interface CorpusItem {
+  id: string;
+  title: string;
+  category: 'game' | 'comic' | 'movie';
+  notes: string;
+  status: 'backlog' | 'in_progress' | 'published';
+  published_url?: string;
+  created_at: string;
+}
