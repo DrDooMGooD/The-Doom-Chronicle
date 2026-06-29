@@ -651,11 +651,19 @@ export default function ReviewVault() {
                 </div>
 
                 {/* Article Prose Body */}
-                <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-4 font-sans font-medium">
-                  {selectedArticle.content.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx} className="mb-4">{paragraph}</p>
-                  ))}
-                </div>
+                 <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-6 font-sans font-medium">
+                   {(selectedArticle.content.replace(/\r\n/g, '\n').includes('\n\n')
+                     ? selectedArticle.content.replace(/\r\n/g, '\n').split(/\n{2,}/)
+                     : selectedArticle.content.replace(/\r\n/g, '\n').split(/\n+/)
+                    )
+                    .filter(p => p.trim())
+                    .map((paragraph, idx) => (
+                      <p key={idx} className="first-of-type:first-letter:text-4xl first-of-type:first-letter:font-comic first-of-type:first-letter:mr-2 first-of-type:first-letter:float-left first-of-type:first-letter:text-yellow-400 first-of-type:first-letter:leading-none">
+                        {paragraph.trim()}
+                      </p>
+                    ))
+                   }
+                 </div>
 
                 {/* Dynamic FAQs Accordion in comic design */}
                 {selectedArticle.faqs && selectedArticle.faqs.length > 0 && (
