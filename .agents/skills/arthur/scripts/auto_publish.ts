@@ -66,7 +66,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
             },
             required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
           },
-          maxOutputTokens: 1500,
+          maxOutputTokens: 8192,
           temperature: 0.85,
         },
       }),
@@ -83,7 +83,17 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     throw new Error('Empty response from Gemini');
   }
 
-  return JSON.parse(text.trim());
+  let cleanText = text.trim();
+  if (cleanText.startsWith('```')) {
+    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+  }
+
+  try {
+    return JSON.parse(cleanText);
+  } catch (parseErr: any) {
+    console.error('❌ Parse Error. Gemini API Response object:', JSON.stringify(result, null, 2));
+    throw new Error(`JSON parse error: ${parseErr.message}`);
+  }
 }
 
 async function main() {

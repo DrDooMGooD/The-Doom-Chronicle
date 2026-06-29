@@ -619,7 +619,7 @@ export default function ReviewVault() {
                   src={selectedArticle.imageUrl}
                   alt={selectedArticle.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover filter contrast-125"
+                  className="w-full h-full object-cover object-top filter contrast-125"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">

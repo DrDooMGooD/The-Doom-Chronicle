@@ -168,7 +168,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
             },
             required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
           },
-          maxOutputTokens: 1500,
+          maxOutputTokens: 8192,
           temperature: 0.85,
         },
       }),
