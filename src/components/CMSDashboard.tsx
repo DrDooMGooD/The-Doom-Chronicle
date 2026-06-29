@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save 
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff 
 } from 'lucide-react';
 import { Article } from '../types';
 import { fetchAdminArticles, updateArticle, deleteArticle, createArticle } from '../services/api';
@@ -15,6 +15,7 @@ interface CMSDashboardProps {
 export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [passcode, setPasscode] = useState(() => localStorage.getItem('castle_passcode') || '');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showPasscode, setShowPasscode] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   
   const [articles, setArticles] = useState<Article[]>([]);
@@ -241,13 +242,20 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
               <label className="block text-left text-xs font-bold text-stone-500 mb-1.5">CRYPTOGRAPHIC KEY</label>
               <div className="relative flex items-center">
                 <input
-                  type="password"
+                  type={showPasscode ? 'text' : 'password'}
                   placeholder="ENTER ACCESS KEY..."
                   value={passcode}
                   onChange={(e) => setPasscode(e.target.value)}
-                  className="w-full bg-stone-950 text-yellow-400 border-2 border-black px-4 py-3 text-sm focus:outline-hidden focus:border-red-500 placeholder:text-stone-700 tracking-widest text-center"
+                  className="w-full bg-stone-950 text-yellow-400 border-2 border-black pl-4 pr-12 py-3 text-sm focus:outline-hidden focus:border-red-500 placeholder:text-stone-700 tracking-widest text-center"
                 />
-                <Key className="absolute right-3.5 w-4 h-4 text-stone-600" />
+                <button
+                  type="button"
+                  onClick={() => setShowPasscode(!showPasscode)}
+                  className="absolute right-3.5 text-stone-600 hover:text-stone-300 transition-colors cursor-pointer animate-pulse"
+                  title={showPasscode ? "Hide Access Key" : "Show Access Key"}
+                >
+                  {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
