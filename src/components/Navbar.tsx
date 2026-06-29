@@ -106,11 +106,11 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          {/* Royal flag standard (hidden on small/medium responsive sizes) */}
+          {/* Flag indicator (Hidden on mobile) */}
           <div className="hidden md:flex items-center shrink-0">
             <div className="relative flex flex-col items-center shrink-0 mr-1.5">
-              <div className="w-2 h-2 bg-gradient-to-r from-yellow-250 via-yellow-400 to-yellow-600 rounded-full border border-black shadow-sm z-20 animate-pulse" />
-              <div className="w-0.5 h-10 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-600 border border-black -mt-1 z-10 shadow-sm" />
+              <div className="w-2.5 h-2.5 bg-gradient-to-r from-[#fef5d1] via-[#facc15] to-[#ca8a04] rounded-full border border-black shadow-sm z-20 animate-pulse" />
+              <div className="w-1 h-10 bg-gradient-to-r from-[#fef5d1] via-[#facc15] to-[#ca8a04] border border-black -mt-1 z-10 shadow-sm" />
             </div>
             <div className="relative overflow-visible">
               <img
