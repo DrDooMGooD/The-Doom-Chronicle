@@ -651,18 +651,39 @@ export default function ReviewVault() {
                 </div>
 
                 {/* Article Prose Body */}
-                 <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-6 font-sans font-medium">
-                   {(selectedArticle.content.replace(/\r\n/g, '\n').includes('\n\n')
-                     ? selectedArticle.content.replace(/\r\n/g, '\n').split(/\n{2,}/)
-                     : selectedArticle.content.replace(/\r\n/g, '\n').split(/\n+/)
-                    )
-                    .filter(p => p.trim())
-                    .map((paragraph, idx) => (
-                      <p key={idx} className="first-of-type:first-letter:text-4xl first-of-type:first-letter:font-comic first-of-type:first-letter:mr-2 first-of-type:first-letter:float-left first-of-type:first-letter:text-yellow-400 first-of-type:first-letter:leading-none">
-                        {paragraph.trim()}
-                      </p>
-                    ))
-                   }
+                 <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-6 font-sans font-medium text-justify">
+                   {(() => {
+                     const normalized = selectedArticle.content.replace(/\r\n/g, '\n').trim();
+                     let paragraphs: string[] = [];
+                     
+                     if (normalized.includes('\n')) {
+                       paragraphs = normalized.split(/\n+/).filter(p => p.trim());
+                     } else {
+                       const rawSentences = normalized.split(/\.\s+/);
+                       const sentences = rawSentences.map((s, idx) => {
+                         if (!s.trim()) return '';
+                         if (idx === rawSentences.length - 1) return s.trim();
+                         const lastChar = s.trim().slice(-1);
+                         if (['.', '!', '?'].includes(lastChar)) return s.trim();
+                         return s.trim() + '.';
+                       }).filter(s => s.length > 0);
+
+                       let curr: string[] = [];
+                       for (let i = 0; i < sentences.length; i++) {
+                         curr.push(sentences[i]);
+                         if (curr.length === 3 || i === sentences.length - 1) {
+                           paragraphs.push(curr.join(' '));
+                           curr = [];
+                         }
+                       }
+                     }
+
+                     return paragraphs.map((paragraph, idx) => (
+                       <p key={idx} className="first-of-type:first-letter:text-4xl first-of-type:first-letter:font-comic first-of-type:first-letter:mr-2 first-of-type:first-letter:float-left first-of-type:first-letter:text-yellow-400 first-of-type:first-letter:leading-none">
+                         {paragraph.trim()}
+                       </p>
+                     ));
+                   })()}
                  </div>
 
                 {/* Dynamic FAQs Accordion in comic design */}
