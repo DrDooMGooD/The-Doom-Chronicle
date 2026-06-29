@@ -22,6 +22,14 @@ export function getSupabaseConfig() {
     }
   }
 
+  // Node environment process.env fallback (for CLI tools & runners)
+  if (!url || !anonKey) {
+    try {
+      url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || url;
+      anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || anonKey;
+    } catch {}
+  }
+
   // Hardcoded fallback credentials to support instant connection in Google AI Studio previews
   if (!url || !anonKey) {
     url = 'https://bazvdidiqtuzkqkqmtha.supabase.co';
