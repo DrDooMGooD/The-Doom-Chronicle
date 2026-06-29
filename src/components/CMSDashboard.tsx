@@ -49,6 +49,10 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   // Agent API guide drawer state
   const [showAgentGuide, setShowAgentGuide] = useState(false);
 
+  // Sovereign keys settings state
+  const [showSettings, setShowSettings] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini-api-key') || '');
+
   useEffect(() => {
     if (passcode) {
       handleAuth();
@@ -297,6 +301,13 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
           </div>
           
           <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="bg-stone-900 border border-emerald-600 hover:bg-emerald-600 hover:text-white font-bold text-xs uppercase px-4 py-2 flex items-center space-x-1.5 transition-colors cursor-pointer text-emerald-400"
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Sovereign Keys</span>
+            </button>
             <button
               onClick={() => setShowAgentGuide(true)}
               className="bg-stone-900 border border-yellow-600 hover:bg-yellow-600 hover:text-black font-bold text-xs uppercase px-4 py-2 flex items-center space-x-1.5 transition-colors cursor-pointer text-yellow-400"
@@ -746,6 +757,69 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
 
             </form>
           </motion.div>
+        </div>
+      )}
+
+      {/* Sovereign Settings Drawer */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xs">
+          <div className="bg-stone-900 border-4 border-black w-full max-w-xl shadow-comic relative text-stone-100 uppercase p-6 font-mono">
+            
+            <div className="flex justify-between items-center border-b-2 border-black pb-3 mb-4">
+              <div className="flex items-center space-x-2 text-emerald-500 font-bold">
+                <Settings className="w-5 h-5 shrink-0" />
+                <h3 className="font-comic text-xl tracking-wider">SOVEREIGN CONFIGURATION</h3>
+              </div>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="bg-red-650 hover:bg-red-500 text-white text-xs border border-black px-2.5 py-1 cursor-pointer"
+              >
+                X CLOSE
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              localStorage.setItem('gemini-api-key', geminiApiKey);
+              alert('Sovereign settings successfully written to browser storage!');
+              setShowSettings(false);
+            }} className="space-y-4 text-xs">
+              
+              <p className="text-stone-300 normal-case leading-normal font-sans">
+                Configure your Gemini API Key to activate dynamic AI chat with Doctor Doom under the **Ask Doom\'s Counsel** section. 
+                If no key is configured, the system will gracefully fall back to the static quote list.
+              </p>
+
+              <div>
+                <label className="block text-stone-400 text-[10px] font-bold mb-1">GEMINI API KEY</label>
+                <input
+                  type="password"
+                  placeholder="AIzaSy..."
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                  className="w-full bg-stone-950 text-yellow-400 border-2 border-black px-3 py-2.5 text-xs focus:outline-hidden focus:border-emerald-500 placeholder:text-stone-850"
+                />
+              </div>
+
+              {geminiApiKey ? (
+                <div className="bg-emerald-950/40 border border-emerald-900 text-emerald-400 p-2.5 rounded-xs text-[10px] uppercase font-bold text-center">
+                  ✓ DYNAMIC AI CHAT SERVICE ACTIVE
+                </div>
+              ) : (
+                <div className="bg-stone-950 border border-stone-850 text-stone-500 p-2.5 rounded-xs text-[10px] uppercase font-bold text-center">
+                  ⚠️ STATIC QUOTE FALLBACK SERVICE ACTIVE (NO KEY SET)
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-comic text-lg py-2.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
+              >
+                SAVE CONFIGURATION →
+              </button>
+
+            </form>
+          </div>
         </div>
       )}
 

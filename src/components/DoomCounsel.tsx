@@ -1,11 +1,15 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Flame, Shield, HelpCircle, RefreshCw, Send } from 'lucide-react';
 import { doomQuotes } from '../data';
+import { Article } from '../types';
+import { fetchArticles } from '../services/api';
+import { generateDoomResponse } from '../services/gemini';
 
 export default function DoomCounsel() {
   const [selectedMood, setSelectedMood] = useState<'stern' | 'wrathful' | 'triumphant' | 'benevolent'>('stern');
   const [customQuestion, setCustomQuestion] = useState('');
+  const [articles, setArticles] = useState<Article[]>([]);
   const [responseLog, setResponseLog] = useState<{ query: string, mood: string, answer: string }[]>([
     {
       query: 'Does Doom support open-source software?',
@@ -15,8 +19,15 @@ export default function DoomCounsel() {
   ]);
   const [isAnswering, setIsAnswering] = useState(false);
 
+  // Load articles context for Gemini
+  useEffect(() => {
+    fetchArticles()
+      .then(setArticles)
+      .catch(err => console.warn('Could not load database context for Doom Counsel:', err));
+  }, []);
+
   // Simple comic response generator based on questions and mood
-  const handleAskDoom = (e: FormEvent) => {
+  const handleAskDoom = async (e: FormEvent) => {
     e.preventDefault();
     if (!customQuestion.trim() || isAnswering) return;
 
@@ -24,7 +35,16 @@ export default function DoomCounsel() {
     const question = customQuestion;
     setCustomQuestion('');
 
-    setTimeout(() => {
+    try {
+      const dynamicResponse = await generateDoomResponse(question, selectedMood, articles);
+      setResponseLog((prev) => [
+        { query: question, mood: selectedMood, answer: dynamicResponse },
+        ...prev
+      ]);
+    } catch (apiErr: any) {
+      console.warn('Gemini chat fell back to static system:', apiErr.message);
+
+      // Fallback: original static comic response generator based on questions and mood
       const moodQuotes = doomQuotes.filter((q) => q.emotion === selectedMood);
       const baseQuote = moodQuotes[Math.floor(Math.random() * moodQuotes.length)]?.quote || 
                         'Your question is meaningless. I command you to search for better answers!';
@@ -45,8 +65,9 @@ export default function DoomCounsel() {
         { query: question, mood: selectedMood, answer: modifiedAnswer },
         ...prev
       ]);
+    } finally {
       setIsAnswering(false);
-    }, 800);
+    }
   };
 
   return (
