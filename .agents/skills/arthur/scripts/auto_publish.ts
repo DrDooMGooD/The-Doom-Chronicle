@@ -44,7 +44,29 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
         ],
         generationConfig: {
           responseMimeType: 'application/json',
-          maxOutputTokens: 1000,
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              subtitle: { type: 'STRING' },
+              excerpt: { type: 'STRING' },
+              content: { type: 'STRING' },
+              doomRating: { type: 'NUMBER' },
+              doomVerdict: { type: 'STRING' },
+              faqs: {
+                type: 'ARRAY',
+                items: {
+                  type: 'OBJECT',
+                  properties: {
+                    question: { type: 'STRING' },
+                    answer: { type: 'STRING' }
+                  },
+                  required: ['question', 'answer']
+                }
+              }
+            },
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
+          },
+          maxOutputTokens: 1500,
           temperature: 0.85,
         },
       }),
