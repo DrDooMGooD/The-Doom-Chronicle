@@ -560,29 +560,29 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                     <thead>
                       <tr className="border-b-2 border-black text-stone-500 font-bold">
                         <th className="pb-3 w-1/3">Chronicle Title</th>
-                        <th className="pb-3 px-4">Category</th>
-                        <th className="pb-3 px-4">Scribe</th>
-                        <th className="pb-3 px-4">Region</th>
+                        <th className="pb-3 px-4 hidden sm:table-cell">Category</th>
+                        <th className="pb-3 px-4 hidden md:table-cell">Scribe</th>
+                        <th className="pb-3 px-4 hidden lg:table-cell">Region</th>
                         <th className="pb-3 text-right">Sovereign Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-850">
                       {(activeTab === 'pending' ? pendingArticles : activeTab === 'published' ? publishedArticles : draftArticles).map((art) => (
                         <tr key={art.id} className="hover:bg-stone-850/50 transition-colors group">
-                          <td className="py-4 font-bold text-white max-w-sm truncate">
-                            <span className="block">{art.title}</span>
+                          <td className="py-4 font-bold text-white max-w-[120px] sm:max-w-sm truncate">
+                            <span className="block truncate">{art.title}</span>
                             <span className="block text-[9px] text-stone-500 mt-0.5 normal-case font-normal truncate italic">
                               {art.subtitle || 'No subtitle'}
                             </span>
                           </td>
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 hidden sm:table-cell">
                             <span className="bg-stone-950 border border-stone-800 px-2 py-0.5 rounded-sm font-bold text-[10px]">
                               {art.category}
                             </span>
                           </td>
-                          <td className="py-4 px-4 text-stone-400 font-bold">{art.authorName || 'Dr. Doom'}</td>
-                          <td className="py-4 px-4 text-stone-400">{art.geoRegion || 'Latveria'}</td>
-                          <td className="py-4 text-right flex justify-end space-x-2">
+                          <td className="py-4 px-4 text-stone-400 font-bold hidden md:table-cell">{art.authorName || 'Dr. Doom'}</td>
+                          <td className="py-4 px-4 text-stone-400 hidden lg:table-cell">{art.geoRegion || 'Latveria'}</td>
+                          <td className="py-4 text-right flex justify-end space-x-1 sm:space-x-2">
                             {art.status === 'pending_review' && (
                               <button
                                 onClick={() => handleApprove(art.id)}
