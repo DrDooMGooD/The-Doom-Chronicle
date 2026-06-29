@@ -127,3 +127,51 @@
   transform-origin: left center;
 }
 
+/* Custom Comic Text Shadow & Highlight Styling */
+.text-shadow-doom {
+  text-shadow: 
+    -1.5px -1.5px 0 #000000,  
+     1.5px -1.5px 0 #000000,
+    -1.5px  1.5px 0 #000000,
+     1.5px  1.5px 0 #000000,
+     3px  3px 0px #facc15; /* Golden Yellow offset shadow */
+}
+
+.text-shadow-doom-hover {
+  text-shadow: 
+    -1.5px -1.5px 0 #000000,  
+     1.5px -1.5px 0 #000000,
+    -1.5px  1.5px 0 #000000,
+     1.5px  1.5px 0 #000000,
+     3px  3px 0px #ef4444; /* Fiery Red offset shadow on hover */
+}
+
+/* Glossy metal highlight shine effect */
+.glossy-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.glossy-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+}
+
+.glossy-highlight:hover::before {
+  left: 150%;
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
