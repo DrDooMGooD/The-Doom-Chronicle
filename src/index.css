@@ -146,6 +146,35 @@
      3px  3px 0px #ef4444; /* Fiery Red offset shadow on hover */
 }
 
+/* Bigger, bolder retro 3D title text shadow effects for Hero */
+.text-3d-title-white {
+  text-shadow: 
+    -2px -2px 0 #000000,  
+     2px -2px 0 #000000,
+    -2px  2px 0 #000000,
+     2px  2px 0 #000000,
+    -3.5px -3.5px 0 #000000,  
+     3.5px -3.5px 0 #000000,
+    -3.5px  3.5px 0 #000000,
+     3.5px  3.5px 0 #000000,
+     6px  6px 0px #000000,
+     9px  9px 0px #ef4444; /* Beautiful Solid Red 3D block offset */
+}
+
+.text-3d-title-emerald {
+  text-shadow: 
+    -2px -2px 0 #000000,  
+     2px -2px 0 #000000,
+    -2px  2px 0 #000000,
+     2px  2px 0 #000000,
+    -3.5px -3.5px 0 #000000,  
+     3.5px -3.5px 0 #000000,
+    -3.5px  3.5px 0 #000000,
+     3.5px  3.5px 0 #000000,
+     6px  6px 0px #000000,
+     9px  9px 0px #facc15; /* Beautiful Solid Golden Yellow 3D block offset */
+}
+
 /* Glossy metal highlight shine effect */
 .glossy-highlight {
   position: relative;

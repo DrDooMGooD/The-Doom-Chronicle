@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
 import { Shield, Sparkles, AlertCircle, Quote, Star } from 'lucide-react';
 import { useState } from 'react';
+// @ts-ignore
+import domPinedaImage from '../assets/dom_pineda-1.jpg';
 
 interface HeroProps {
   onExploreClick: () => void;
@@ -9,6 +11,13 @@ interface HeroProps {
 export default function Hero({ onExploreClick }: HeroProps) {
   const [activeSoundEffect, setActiveSoundEffect] = useState<string | null>(null);
   const [clickCount, setClickCount] = useState(0);
+  const [isPortraitHovered, setIsPortraitHovered] = useState(false);
+
+  // Default Dr. Doom portrait
+  const defaultDoomImage = "https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47";
+
+  // Use the imported high-res user photo as the hover/alternate image (State-Appointed Chronicler Dom Pineda)
+  const hoverDoomImage = domPinedaImage;
 
   const triggerSound = (effect: string) => {
     setActiveSoundEffect(effect);
@@ -26,6 +35,8 @@ export default function Hero({ onExploreClick }: HeroProps) {
   ];
 
   const currentQuote = doomQuotes[clickCount % doomQuotes.length];
+  const chroniclerQuote = "Aha! The state-appointed chronicler Dom Pineda himself! Doom approves of your magnificent layout styling efforts!";
+  const displayedQuote = isPortraitHovered ? chroniclerQuote : currentQuote;
 
   return (
     <section
@@ -40,7 +51,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10">
         
         {/* Left Side: Comic-Book Cover / Big Title Block (7 Columns) */}
-        <div className="lg:col-span-7 flex flex-col justify-between bg-stone-950 border-4 border-black p-6 sm:p-8 shadow-comic-lg relative">
+        <div className="lg:col-span-7 flex flex-col justify-between bg-stone-950 border-4 border-black p-6 sm:p-8 shadow-comic-lg relative transition-all duration-300 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
           
           {/* Cover Header Banner */}
           <div className="flex items-center justify-between border-b-4 border-black pb-4 mb-6">
@@ -48,32 +59,32 @@ export default function Hero({ onExploreClick }: HeroProps) {
               CHRONICLER: DOM PINEDA
             </span>
             <div className="flex items-center space-x-1.5">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 animate-spin-slow" />
               <span className="font-comic text-lg text-white">12¢ APPROVED BY THE DOOM BOARD</span>
             </div>
           </div>
 
           <div>
             {/* Super Comic Title */}
-            <div className="relative pt-16 sm:pt-20">
-              <span className="absolute -top-1 sm:-top-2 -left-2 font-comic text-2xl text-red-600 bg-black px-2.5 py-1 border-2 border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider select-none">
+            <div className="relative pt-16 sm:pt-20 group cursor-default">
+              <span className="absolute -top-1 sm:-top-2 -left-2 font-comic text-2xl text-red-600 bg-black px-2.5 py-1 border-2 border-black rotate-[-3deg] shadow-comic z-10 uppercase tracking-wider select-none transition-transform group-hover:rotate-[-6deg] group-hover:scale-105 duration-300">
                 BY IMPERIAL DICTATE!
               </span>
-              <h1 className="font-comic text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none text-white uppercase select-none drop-shadow-[6px_6px_0px_rgba(0,0,0,1)]">
-                THE DOOM <br />
-                <span className="text-emerald-400 block tracking-wide">CHRONICLE</span>
+              <h1 className="font-comic text-6xl sm:text-7xl lg:text-8xl tracking-wide leading-none uppercase select-none transition-all duration-300 group-hover:scale-[1.01]">
+                <span className="text-3d-title-white block tracking-wider group-hover:text-yellow-100 transition-colors">THE DOOM</span>
+                <span className="text-3d-title-emerald block tracking-wider mt-2 group-hover:text-emerald-350 transition-colors">CHRONICLE</span>
               </h1>
             </div>
 
             {/* Subcategories with Comic sound design vibes */}
             <div className="mt-8 flex flex-wrap gap-2.5 text-xs font-mono font-bold uppercase">
-              <span className="bg-red-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
+              <span className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all tracking-wide cursor-help">
                 🎮 VIDEO GAMES
               </span>
-              <span className="bg-emerald-600 text-white px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
+              <span className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all tracking-wide cursor-help">
                 📚 COMIC BOOKS
               </span>
-              <span className="bg-stone-800 text-stone-200 px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] tracking-wide">
+              <span className="bg-stone-800 hover:bg-stone-700 text-stone-200 px-3 py-1.5 border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all tracking-wide cursor-help">
                 🎬 CINEMATIC ART
               </span>
             </div>
@@ -90,7 +101,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
           <div className="mt-8 pt-6 border-t-4 border-black flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <button
               onClick={onExploreClick}
-              className="bg-red-600 hover:bg-red-500 text-white font-comic text-2xl uppercase py-3 px-8 border-4 border-black shadow-comic active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer text-center"
+              className="bg-gradient-to-r from-red-700 via-red-600 to-red-800 hover:from-rose-600 hover:via-red-500 hover:to-rose-700 text-white font-comic text-2xl uppercase py-4 px-8 border-4 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all cursor-pointer text-center glossy-highlight rounded-xs"
             >
               ACCESS THE LEDGER →
             </button>
@@ -100,9 +111,9 @@ export default function Hero({ onExploreClick }: HeroProps) {
                 const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
                 triggerSound(randomSound);
               }}
-              className="bg-emerald-800 hover:bg-emerald-700 text-white font-mono text-xs font-bold uppercase py-3 px-5 border-2 border-black shadow-comic active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+              className="bg-gradient-to-r from-emerald-850 to-emerald-950 hover:from-emerald-700 hover:to-emerald-800 text-white font-mono text-xs font-bold uppercase py-4 px-6 border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center justify-center space-x-1.5 glossy-highlight"
             >
-              <Sparkles className="w-4 h-4 text-yellow-400" />
+              <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400 animate-pulse" />
               <span>STRIKE DICTUM GONG</span>
             </button>
           </div>
@@ -134,7 +145,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
               <span>LORD DOOM SPEAKS:</span>
             </h4>
             <p className="font-sans font-bold text-stone-900 text-sm italic">
-              "{currentQuote}"
+              "{displayedQuote}"
             </p>
             <div className="absolute -bottom-4 left-10 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[14px] border-t-white" />
             <div className="absolute -bottom-[20px] left-[39px] w-0 h-0 border-l-[13px] border-l-transparent border-r-[13px] border-r-transparent border-t-[15px] border-t-black -z-10" />
@@ -142,22 +153,45 @@ export default function Hero({ onExploreClick }: HeroProps) {
 
           {/* Classic Sovereign Portrait representation of Dr. Doom */}
           <div className="relative flex justify-center py-2 z-0">
-            <div className="relative w-64 h-64 sm:w-72 sm:h-72 border-4 border-black bg-stone-950 overflow-hidden shadow-comic rounded-full flex items-center justify-center">
-              <img
-                src="https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47"
+            <motion.div 
+              onMouseEnter={() => setIsPortraitHovered(true)}
+              onMouseLeave={() => setIsPortraitHovered(false)}
+              whileHover={{ scale: 1.05, rotate: 1.5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              className="relative w-64 h-64 sm:w-72 sm:h-72 border-4 border-black bg-stone-950 overflow-hidden rounded-full flex items-center justify-center cursor-crosshair group/portrait transition-all duration-300 shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_0px_rgba(239,68,68,1)]"
+            >
+              {/* Default Image */}
+              <motion.img
+                src={defaultDoomImage}
                 alt="Sovereign Lord Doom"
-                className="w-full h-full object-cover select-none"
+                className="absolute inset-0 w-full h-full object-cover select-none"
                 referrerPolicy="no-referrer"
+                animate={{ opacity: isPortraitHovered ? 0 : 1 }}
+                transition={{ duration: 0.3 }}
               />
+
+              {/* Hover Alternate Image */}
+              <motion.img
+                src={hoverDoomImage}
+                alt="State-Appointed Chronicler Dom Pineda"
+                className="absolute inset-0 w-full h-full object-cover select-none"
+                referrerPolicy="no-referrer"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isPortraitHovered ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+              />
+
+              {/* Ambient overlay when hovered */}
+              <div className="absolute inset-0 bg-emerald-600/10 mix-blend-color-burn opacity-0 group-hover/portrait:opacity-100 transition-opacity duration-300 pointer-events-none" />
               
               {/* Glowing Ambient Indicator */}
-              <div className="absolute top-4 right-4 bg-red-600 border border-black text-[9px] text-white px-1.5 py-0.5 rounded-xs font-mono font-bold animate-pulse z-10">
-                DOOM-CAM ONLINE
+              <div className="absolute top-4 right-4 bg-red-600 border border-black text-[9px] text-white px-2 py-0.5 rounded-xs font-mono font-bold animate-pulse z-10 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)]">
+                {isPortraitHovered ? "CHRONICLER ONLINE" : "DOOM-CAM ONLINE"}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="absolute -bottom-3 bg-stone-950 border-2 border-black text-white py-1 px-3 font-comic text-sm tracking-wider shadow-comic uppercase">
-              VICTOR VON DOOM
+            <div className="absolute -bottom-3 bg-stone-950 border-2 border-black text-white py-1 px-4 font-comic text-sm tracking-wider shadow-comic uppercase z-20">
+              {isPortraitHovered ? "CHRONICLER: DOM PINEDA" : "VICTOR VON DOOM"}
             </div>
           </div>
 
