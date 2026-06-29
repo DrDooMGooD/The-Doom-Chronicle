@@ -179,6 +179,7 @@ export async function submitProposal(proposal: {
     geoRegion: 'Latveria',
     publishDate,
     readTime,
+    slug,
     faqs: []
   };
 
