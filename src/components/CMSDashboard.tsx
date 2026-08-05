@@ -914,8 +914,8 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                               <span className="text-[9px] text-stone-600">DATE PLANNED: {new Date(item.created_at || Date.now()).toLocaleDateString()}</span>
 
                               <div className="flex items-center gap-1.5">
-                                {/* Expand notes editor button — only for backlog items */}
-                                {item.status === 'backlog' && (
+                                {/* Expand notes editor button — shown on all cards except while Arthur is actively drafting */}
+                                {item.status !== 'in_progress' && (
                                   <button
                                     type="button"
                                     title={isExpanded ? 'Close notes editor' : 'Add your takes & talking points'}
