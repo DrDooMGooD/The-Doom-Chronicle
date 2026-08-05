@@ -309,3 +309,118 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
 
   return publishedUrl;
 }
+
+export async function rewriteArticleWithArthur(
+  article: { id: string; title: string; category: string; content: string; excerpt: string; subtitle: string; doomVerdict: string; doomRating: number },
+  instructions: string,
+  geminiApiKey: string
+): Promise<void> {
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+  if (!geminiApiKey) throw new Error('Gemini API key is required. Save it in the "Sovereign Keys" modal.');
+  if (!instructions.trim()) throw new Error('Rewrite instructions cannot be empty.');
+
+  const prompt = `You are Doctor Doom (Victor von Doom), the absolute sovereign ruler of Latveria and review editor.
+You have already written a review and now wish to revise it based on specific editorial directives.
+
+Original Article Title: "${article.title}"
+Category: "${article.category}"
+
+--- CURRENT REVIEW (to be rewritten) ---
+Subtitle: ${article.subtitle}
+Excerpt: ${article.excerpt}
+Content:
+${article.content}
+Verdict: ${article.doomVerdict}
+Rating: ${article.doomRating}/5
+
+--- SOVEREIGN EDITORIAL DIRECTIVES (you MUST follow these exactly) ---
+${instructions}
+
+Rewrite the review from scratch incorporating the above directives. Keep your signature majestic, arrogant, and articulate Doctor Doom tone.
+Refer to yourself in the first-person plural ("We", "Us", "Doom") or third-person.
+
+You MUST respond with a raw JSON object matching the following schema EXACTLY. Do not add any backticks, markdown, or text outside of this JSON:
+{
+  "subtitle": "A short, dramatic, comic-style sub-headline",
+  "excerpt": "A 1-2 sentence compelling summary hooking the reader",
+  "content": "The full revised review text. Contain exactly 2-3 paragraphs separated by double newlines.",
+  "doomRating": 4.5,
+  "doomVerdict": "Lord Doom's absolute summary verdict quote",
+  "faqs": [
+    {
+      "question": "A mock reader question about the item",
+      "answer": "Doom's final, absolute response to the question"
+    }
+  ]
+}`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              subtitle: { type: 'STRING' },
+              excerpt: { type: 'STRING' },
+              content: { type: 'STRING' },
+              doomRating: { type: 'NUMBER' },
+              doomVerdict: { type: 'STRING' },
+              faqs: {
+                type: 'ARRAY',
+                items: {
+                  type: 'OBJECT',
+                  properties: {
+                    question: { type: 'STRING' },
+                    answer: { type: 'STRING' }
+                  },
+                  required: ['question', 'answer']
+                }
+              }
+            },
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
+          },
+          maxOutputTokens: 8192,
+          temperature: 0.85,
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) throw new Error(`Gemini API returned status ${response.status}`);
+
+  const result = await response.json();
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Empty response from Gemini');
+
+  let cleanText = text.trim();
+  if (cleanText.startsWith('```')) {
+    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+  }
+
+  const draft = JSON.parse(cleanText);
+  const wordCount = (draft.content || '').split(/\s+/).length;
+  const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
+
+  const { error } = await client
+    .from('articles')
+    .update({
+      subtitle: draft.subtitle || '',
+      excerpt: draft.excerpt || '',
+      content: draft.content || '',
+      doom_rating: Number(draft.doomRating) || article.doomRating,
+      doom_verdict: draft.doomVerdict || '',
+      faqs: draft.faqs || [],
+      read_time: readTime,
+      status: 'pending_review',
+    })
+    .eq('id', article.id);
+
+  if (error) throw new Error(`Article rewrite save failed: ${error.message}`);
+}

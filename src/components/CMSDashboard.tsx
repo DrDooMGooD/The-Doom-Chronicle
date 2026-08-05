@@ -12,7 +12,7 @@ import {
 } from '../services/api';
 import { 
   fetchCorpusEntries, triggerLucyBrainstorm, triggerArthurPublish,
-  deleteCorpusItem, clearCorpusBacklog, updateCorpusItem
+  deleteCorpusItem, clearCorpusBacklog, updateCorpusItem, rewriteArticleWithArthur
 } from '../services/agentService';
 
 interface CMSDashboardProps {
@@ -30,6 +30,11 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry' | 'corpus'>('pending');
+
+  // Arthur Rewrite state
+  const [rewriteTarget, setRewriteTarget] = useState<Article | null>(null);
+  const [rewriteInstructions, setRewriteInstructions] = useState('');
+  const [isRewriting, setIsRewriting] = useState(false);
 
   // Registry ledger states
   const [registryEntries, setRegistryEntries] = useState<GuestbookEntry[]>([]);
@@ -253,6 +258,41 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       alert(`Lucy Strategy Compilation Failed: ${err.message}`);
     } finally {
       setIsLucyRunning(false);
+    }
+  };
+
+  const handleArthurRewrite = async () => {
+    if (!rewriteTarget || !rewriteInstructions.trim()) return;
+    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    if (!key) {
+      alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
+      return;
+    }
+    setIsRewriting(true);
+    try {
+      await rewriteArticleWithArthur(
+        {
+          id: rewriteTarget.id,
+          title: rewriteTarget.title,
+          category: rewriteTarget.category,
+          content: rewriteTarget.content,
+          excerpt: rewriteTarget.excerpt,
+          subtitle: rewriteTarget.subtitle,
+          doomVerdict: rewriteTarget.doomVerdict,
+          doomRating: rewriteTarget.doomRating,
+        },
+        rewriteInstructions,
+        key
+      );
+      await reloadArticles();
+      setRewriteTarget(null);
+      setRewriteInstructions('');
+      setPreviewArticle(null);
+      alert(`✍️ ARTHUR: Rewrite complete! "${rewriteTarget.title}" has been updated and is back in Pending Review.`);
+    } catch (err: any) {
+      alert(`Rewrite failed: ${err.message}`);
+    } finally {
+      setIsRewriting(false);
     }
   };
 
@@ -736,6 +776,16 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                               <Eye className="w-3.5 h-3.5 shrink-0" />
                               <span className="hidden sm:inline">Preview</span>
                             </button>
+                            {(art.status === 'pending_review' || art.status === 'draft') && (
+                              <button
+                                onClick={() => { setRewriteTarget(art); setRewriteInstructions(''); }}
+                                className="bg-rose-950 hover:bg-rose-900 text-rose-400 hover:text-rose-200 border border-rose-900 hover:border-rose-700 px-3 py-1 flex items-center space-x-1 transition-all cursor-pointer"
+                                title="Instruct Arthur to rewrite this article"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                                <span className="hidden sm:inline">Rewrite</span>
+                              </button>
+                            )}
                             <button
                               onClick={() => handleOpenEditForm(art)}
                               className="bg-stone-950 text-stone-300 hover:text-white border border-stone-800 hover:border-white px-3 py-1 flex items-center space-x-1 transition-all cursor-pointer"
@@ -1521,13 +1571,23 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                   <span className="font-comic text-lg text-yellow-200 tracking-widest uppercase">Draft Preview — Not Yet Published</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {previewArticle.status === 'pending_review' && (
+                  {(previewArticle.status === 'pending_review' || previewArticle.status === 'draft') && (
                     <button
                       onClick={() => { handleApprove(previewArticle.id); setPreviewArticle(null); }}
                       className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase px-3 py-1.5 border border-black shadow-[1px_1px_0px_rgba(0,0,0,1)] flex items-center space-x-1 cursor-pointer transition-colors"
                     >
                       <CheckCircle className="w-3.5 h-3.5" />
                       <span>Approve & Publish</span>
+                    </button>
+                  )}
+                  {(previewArticle.status === 'pending_review' || previewArticle.status === 'draft') && (
+                    <button
+                      onClick={() => { setRewriteTarget(previewArticle); setRewriteInstructions(''); setPreviewArticle(null); }}
+                      className="bg-rose-900 hover:bg-rose-800 text-rose-300 hover:text-rose-100 font-bold text-xs uppercase px-3 py-1.5 border border-rose-800 flex items-center space-x-1 cursor-pointer transition-colors"
+                      title="Instruct Arthur to rewrite this article"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Rewrite</span>
                     </button>
                   )}
                   <button
@@ -1650,6 +1710,85 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                   </div>
                 </div>
 
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Arthur Rewrite Instructions Modal */}
+      <AnimatePresence>
+        {rewriteTarget && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="bg-stone-950 border-4 border-rose-800 w-full max-w-2xl shadow-comic-lg text-stone-100"
+            >
+              {/* Modal Header */}
+              <div className="bg-rose-950 border-b-4 border-rose-800 p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <RefreshCw className="w-5 h-5 text-rose-400" />
+                  <span className="font-comic text-lg text-rose-200 tracking-widest uppercase">Instruct Arthur to Rewrite</span>
+                </div>
+                <button
+                  onClick={() => setRewriteTarget(null)}
+                  disabled={isRewriting}
+                  className="bg-stone-800 hover:bg-stone-700 text-stone-400 font-mono font-bold text-xs border border-stone-700 px-3 py-1.5 cursor-pointer transition-colors uppercase disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Article context */}
+                <div className="bg-stone-900 border border-stone-700 px-4 py-3 space-y-0.5">
+                  <p className="text-[9px] font-bold text-stone-500 uppercase tracking-widest">Rewriting Article</p>
+                  <p className="font-comic text-base text-white tracking-wide">{rewriteTarget.title}</p>
+                  <p className="text-[10px] text-stone-400 font-mono uppercase">{rewriteTarget.category} &mdash; {rewriteTarget.status?.replace('_', ' ')}</p>
+                </div>
+
+                {/* Instructions textarea */}
+                <div className="space-y-2">
+                  <label className="block text-[9px] font-bold text-rose-400 uppercase tracking-widest">
+                    ✍️ Your Editorial Directives for Arthur
+                  </label>
+                  <textarea
+                    rows={8}
+                    value={rewriteInstructions}
+                    onChange={(e) => setRewriteInstructions(e.target.value)}
+                    disabled={isRewriting}
+                    placeholder={`e.g.\n- Mention the multiplayer mode more prominently in the second paragraph\n- Increase the doom rating to 4.5 — the game deserves higher praise\n- Add a section discussing the soundtrack\n- Make the tone harsher regarding the microtransactions\n- Include a reference to Dark Souls comparisons`}
+                    className="w-full bg-stone-900 text-stone-100 border border-stone-700 focus:border-rose-500 focus:outline-none px-4 py-3 text-xs font-sans leading-relaxed resize-y placeholder:text-stone-600 disabled:opacity-50"
+                  />
+                  <p className="text-[10px] text-stone-500 font-sans">Arthur will receive the existing article and rewrite it from scratch honoring your directives above. The result replaces the current draft and stays in Pending Review.</p>
+                </div>
+
+                {/* Submit button */}
+                <div className="flex items-center justify-end gap-3 border-t border-stone-800 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setRewriteTarget(null)}
+                    disabled={isRewriting}
+                    className="bg-stone-800 hover:bg-stone-700 text-stone-400 font-bold text-xs uppercase px-4 py-2.5 border border-stone-700 transition-colors cursor-pointer disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isRewriting || !rewriteInstructions.trim()}
+                    onClick={handleArthurRewrite}
+                    className="bg-rose-700 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs uppercase px-5 py-2.5 border border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-2"
+                  >
+                    {isRewriting ? (
+                      <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Arthur Rewriting...</span></>
+                    ) : (
+                      <><RefreshCw className="w-3.5 h-3.5" /><span>Send Directives to Arthur</span></>
+                    )}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
