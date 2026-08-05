@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw, Star
 } from 'lucide-react';
 import { Article, GuestbookEntry, CorpusItem } from '../types';
 import { 
@@ -28,6 +28,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry' | 'corpus'>('pending');
 
   // Registry ledger states
@@ -727,6 +728,14 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                                 <span className="hidden sm:inline">Approve</span>
                               </button>
                             )}
+                            <button
+                              onClick={() => setPreviewArticle(art)}
+                              className="bg-yellow-900 hover:bg-yellow-800 text-yellow-300 hover:text-yellow-100 border border-yellow-800 hover:border-yellow-600 px-3 py-1 flex items-center space-x-1 transition-all cursor-pointer"
+                              title="Preview as Published"
+                            >
+                              <Eye className="w-3.5 h-3.5 shrink-0" />
+                              <span className="hidden sm:inline">Preview</span>
+                            </button>
                             <button
                               onClick={() => handleOpenEditForm(art)}
                               className="bg-stone-950 text-stone-300 hover:text-white border border-stone-800 hover:border-white px-3 py-1 flex items-center space-x-1 transition-all cursor-pointer"
@@ -1493,6 +1502,159 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
           </div>
         </div>
       )}
+
+      {/* Article Preview Modal — full reader view for pending/draft articles */}
+      <AnimatePresence>
+        {previewArticle && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-stone-950 border-4 border-black w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-comic-lg relative text-stone-100"
+            >
+              {/* Preview Banner */}
+              <div className="bg-yellow-900 border-b-4 border-black p-4 flex items-center justify-between sticky top-0 z-10">
+                <div className="flex items-center space-x-2">
+                  <Eye className="w-5 h-5 text-yellow-300" />
+                  <span className="font-comic text-lg text-yellow-200 tracking-widest uppercase">Draft Preview — Not Yet Published</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {previewArticle.status === 'pending_review' && (
+                    <button
+                      onClick={() => { handleApprove(previewArticle.id); setPreviewArticle(null); }}
+                      className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs uppercase px-3 py-1.5 border border-black shadow-[1px_1px_0px_rgba(0,0,0,1)] flex items-center space-x-1 cursor-pointer transition-colors"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Approve & Publish</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setPreviewArticle(null)}
+                    className="bg-red-800 hover:bg-red-600 text-white font-mono font-bold text-xs border-2 border-black px-3 py-1.5 cursor-pointer transition-colors uppercase"
+                  >
+                    X Close
+                  </button>
+                </div>
+              </div>
+
+              {/* Cover image */}
+              <div className="relative h-64 sm:h-80 border-b-4 border-black">
+                <img
+                  src={previewArticle.imageUrl}
+                  alt={previewArticle.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-top filter contrast-125"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <span className="bg-red-600 text-white font-mono font-bold text-[10px] px-2.5 py-1 border border-black uppercase rounded-xs">
+                    {previewArticle.category}
+                  </span>
+                  <h3 className="font-comic text-4xl sm:text-5xl text-white uppercase mt-2 tracking-wide leading-tight drop-shadow-md">
+                    {previewArticle.title}
+                  </h3>
+                  <p className="font-sans font-bold text-sm sm:text-base text-yellow-400 uppercase mt-1">
+                    {previewArticle.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              {/* Content area */}
+              <div className="p-6 sm:p-8 space-y-6">
+
+                {/* Meta row */}
+                <div className="flex flex-wrap gap-x-6 gap-y-2 items-center justify-between border-b border-stone-800 pb-4 text-xs font-mono text-stone-400">
+                  <span>CHRONICLED ON: {previewArticle.publishDate}</span>
+                  {previewArticle.authorName && <span>SCRIBE: {previewArticle.authorName}</span>}
+                  {previewArticle.geoRegion && <span>REGION: {previewArticle.geoRegion}</span>}
+                  <span>READ TIME: {previewArticle.readTime}</span>
+                </div>
+
+                {/* Prose body */}
+                <div className="prose prose-invert max-w-none text-stone-200 text-sm sm:text-base leading-relaxed space-y-6 font-sans font-medium text-justify">
+                  {(() => {
+                    const normalized = previewArticle.content.replace(/\r\n/g, '\n').trim();
+                    let paragraphs: string[] = [];
+                    if (normalized.includes('\n')) {
+                      paragraphs = normalized.split(/\n+/).filter(p => p.trim());
+                    } else {
+                      const rawSentences = normalized.split(/\.\s+/);
+                      const sentences = rawSentences.map((s, idx) => {
+                        if (!s.trim()) return '';
+                        if (idx === rawSentences.length - 1) return s.trim();
+                        const lastChar = s.trim().slice(-1);
+                        if (['.', '!', '?'].includes(lastChar)) return s.trim();
+                        return s.trim() + '.';
+                      }).filter(s => s.length > 0);
+                      let curr: string[] = [];
+                      for (let i = 0; i < sentences.length; i++) {
+                        curr.push(sentences[i]);
+                        if (curr.length === 3 || i === sentences.length - 1) {
+                          paragraphs.push(curr.join(' '));
+                          curr = [];
+                        }
+                      }
+                    }
+                    return paragraphs.map((para, idx) => (
+                      <p key={idx} className="first-of-type:first-letter:text-4xl first-of-type:first-letter:font-comic first-of-type:first-letter:mr-2 first-of-type:first-letter:float-left first-of-type:first-letter:text-yellow-400 first-of-type:first-letter:leading-none">
+                        {para.trim()}
+                      </p>
+                    ));
+                  })()}
+                </div>
+
+                {/* FAQs */}
+                {previewArticle.faqs && previewArticle.faqs.length > 0 && (
+                  <div className="border-4 border-black p-5 bg-stone-900 shadow-comic mt-6 font-mono">
+                    <h4 className="font-comic text-xl text-yellow-400 uppercase tracking-wider mb-4 border-b-2 border-black pb-2">⚔️ STATE RECORD: FREQUENTLY ASKED QUESTIONS</h4>
+                    <div className="space-y-4">
+                      {previewArticle.faqs.map((faq, i) => (
+                        <div key={i} className="border border-stone-850 p-3 bg-stone-950 rounded-xs shadow-sm">
+                          <p className="text-xs font-bold text-rose-500 uppercase font-mono">Q: {faq.question}</p>
+                          <p className="text-xs text-stone-300 mt-1.5 leading-relaxed font-sans">A: {faq.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sovereign Edict */}
+                <div className="bg-stone-900 border-4 border-emerald-800 p-5 sm:p-6 shadow-comic relative mt-12 overflow-hidden">
+                  <div className="absolute inset-0 halftone-green opacity-20 pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="flex items-center space-x-2 text-emerald-400 font-comic text-xl uppercase mb-3 tracking-wide">
+                      <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                      <span>THE SOVEREIGN EDICT</span>
+                    </div>
+                    <p className="font-sans font-bold text-stone-100 italic text-base sm:text-lg leading-relaxed border-l-4 border-emerald-500 pl-4 mb-4">
+                      "{previewArticle.doomVerdict}"
+                    </p>
+                    <div className="flex items-center justify-between border-t border-stone-800 pt-3">
+                      <span className="font-mono text-xs text-stone-400 font-bold">SOVEREIGN RATING:</span>
+                      <div className="flex items-center space-x-1.5">
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const ratingVal = i + 1;
+                          const isFull = ratingVal <= Math.floor(previewArticle.doomRating);
+                          const isHalf = !isFull && ratingVal === Math.ceil(previewArticle.doomRating);
+                          return (
+                            <Shield key={i} className={`w-5 h-5 ${
+                              isFull ? 'text-red-500 fill-red-500' : isHalf ? 'text-red-500/70 fill-red-500/40' : 'text-stone-700'
+                            } stroke-black stroke-2`} />
+                          );
+                        })}
+                        <span className="font-comic text-lg text-white ml-2 tracking-wide">({previewArticle.doomRating} / 5)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
