@@ -11,7 +11,8 @@ import {
   fetchRegistryEntries, respondToRegistryEntry, deleteRegistryEntry 
 } from '../services/api';
 import { 
-  fetchCorpusEntries, triggerLucyBrainstorm, triggerArthurPublish 
+  fetchCorpusEntries, triggerLucyBrainstorm, triggerArthurPublish,
+  deleteCorpusItem, clearCorpusBacklog, updateCorpusItem
 } from '../services/agentService';
 
 interface CMSDashboardProps {
@@ -36,6 +37,11 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   // Corpus planning backlog states
   const [corpusEntries, setCorpusEntries] = useState<CorpusItem[]>([]);
   const [isLucyRunning, setIsLucyRunning] = useState(false);
+
+  // Inline notes editor state
+  const [expandedCorpusId, setExpandedCorpusId] = useState<string | null>(null);
+  const [corpusEditNotes, setCorpusEditNotes] = useState<Record<string, string>>({});
+  const [corpusSavingId, setCorpusSavingId] = useState<string | null>(null);
   const [arthurPublishingId, setArthurPublishingId] = useState<string | null>(null);
   const [lucySearchQuery, setLucySearchQuery] = useState('');
 
@@ -180,6 +186,48 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       alert(`Failed to delete: ${err.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveCorpusNotes = async (item: CorpusItem) => {
+    const newNotes = corpusEditNotes[item.id] ?? item.notes;
+    setCorpusSavingId(item.id);
+    try {
+      await updateCorpusItem(item.id, { notes: newNotes });
+      setCorpusEntries(prev =>
+        prev.map(c => c.id === item.id ? { ...c, notes: newNotes } : c)
+      );
+      setExpandedCorpusId(null);
+    } catch (err: any) {
+      alert(`Failed to save notes: ${err.message}`);
+    } finally {
+      setCorpusSavingId(null);
+    }
+  };
+
+  const handleDeleteCorpusItem = async (id: string) => {
+    if (!window.confirm('Incinerate this corpus topic? This cannot be undone.')) return;
+    try {
+      await deleteCorpusItem(id);
+      setCorpusEntries(prev => prev.filter(c => c.id !== id));
+    } catch (err: any) {
+      alert(`Failed to purge topic: ${err.message}`);
+    }
+  };
+
+  const handleClearCorpus = async (mode: 'backlog' | 'published' | 'all') => {
+    const labels = {
+      backlog: 'all BACKLOG items',
+      published: 'all BACKLOG + PUBLISHED items',
+      all: 'ALL topics (except in-progress jobs)'
+    };
+    if (!window.confirm(`This will permanently incinerate ${labels[mode]} from the strategy corpus. Proceed?`)) return;
+    try {
+      const count = await clearCorpusBacklog(mode);
+      await reloadCorpus();
+      alert(`🔥 ${count} corpus topic${count !== 1 ? 's' : ''} incinerated.`);
+    } catch (err: any) {
+      alert(`Purge failed: ${err.message}`);
     }
   };
 
@@ -689,7 +737,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                 <div className="space-y-6">
                   {/* Strategic Lucy trigger controller */}
                   <div className="bg-stone-900 border-3 border-black p-5 space-y-4 shadow-comic">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           <Terminal className="w-5 h-5 text-rose-500 animate-pulse" />
@@ -699,6 +747,31 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                           Coordinate with **Lucy** to search the web using 2026 Google Grounding. Ask her to compile general trends or investigate specific upcoming releases and events!
                         </p>
                       </div>
+
+                      {/* Bulk-clear controls */}
+                      {corpusEntries.length > 0 && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[9px] font-bold text-stone-500 uppercase tracking-wide hidden sm:block">Purge:</span>
+                          <button
+                            type="button"
+                            title="Incinerate all backlog-status topics"
+                            onClick={() => handleClearCorpus('backlog')}
+                            className="bg-stone-900 hover:bg-red-900 border border-stone-700 hover:border-red-700 text-stone-400 hover:text-red-300 font-bold text-[10px] uppercase px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>Backlog</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Incinerate all backlog + published topics"
+                            onClick={() => handleClearCorpus('all')}
+                            className="bg-stone-900 hover:bg-red-900 border border-stone-700 hover:border-red-700 text-stone-400 hover:text-red-300 font-bold text-[10px] uppercase px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>All</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-end gap-3 border-t border-stone-850 pt-4">
@@ -765,19 +838,22 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {corpusEntries.map((item) => {
                         const isPublishing = arthurPublishingId === item.id;
+                        const isExpanded = expandedCorpusId === item.id;
+                        const isSaving = corpusSavingId === item.id;
+                        const editNotes = corpusEditNotes[item.id] ?? item.notes;
                         return (
-                          <div key={item.id} className="bg-stone-950 border border-stone-800 p-5 relative shadow-comic flex flex-col justify-between uppercase font-mono text-xs">
+                          <div key={item.id} className="bg-stone-950 border border-stone-800 relative shadow-comic flex flex-col justify-between uppercase font-mono text-xs">
                             
                             {/* Category Tag */}
                             <span className="absolute -top-3 right-4 border border-black text-[9px] font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase bg-stone-900 text-stone-300">
                               {item.category === 'game' ? '🎮 GAME' : item.category === 'comic' ? '📚 COMIC' : '🎬 MOVIE'}
                             </span>
 
-                            <div className="space-y-3 mb-5">
+                            <div className="p-5 space-y-3">
                               <h4 className="font-comic text-base text-emerald-400 tracking-wide leading-tight mt-1">{item.title}</h4>
                               
-                              {item.notes && (
-                                <p className="text-stone-300 text-xs font-sans normal-case bg-stone-900/50 border-l border-emerald-700 pl-2.5 py-1 leading-relaxed">
+                              {item.notes && !isExpanded && (
+                                <p className="text-stone-300 text-xs font-sans normal-case bg-stone-900/50 border-l border-emerald-700 pl-2.5 py-1 leading-relaxed line-clamp-3">
                                   {item.notes}
                                 </p>
                               )}
@@ -796,51 +872,126 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                               </div>
                             </div>
 
+                            {/* Inline notes editor — expands below the card body */}
+                            {isExpanded && (
+                              <div className="border-t border-stone-700 bg-stone-900/60 p-4 space-y-2">
+                                <label className="block text-[9px] font-bold text-rose-400 uppercase tracking-widest mb-1">✍️ Your Takes &amp; Talking Points</label>
+                                <textarea
+                                  rows={6}
+                                  value={editNotes}
+                                  onChange={(e) =>
+                                    setCorpusEditNotes(prev => ({ ...prev, [item.id]: e.target.value }))
+                                  }
+                                  placeholder="Add your specific angles, things you want mentioned, personal takes, references to include..."
+                                  className="w-full bg-stone-950 text-stone-100 border border-stone-700 focus:border-rose-500 focus:outline-none px-3 py-2.5 text-xs font-sans normal-case leading-relaxed resize-y placeholder:text-stone-600"
+                                />
+                                <div className="flex items-center gap-2 pt-1">
+                                  <button
+                                    type="button"
+                                    disabled={isSaving}
+                                    onClick={() => handleSaveCorpusNotes(item)}
+                                    className="bg-rose-700 hover:bg-rose-600 disabled:opacity-50 text-white font-bold text-[10px] uppercase px-3 py-1.5 border border-black shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-1"
+                                  >
+                                    {isSaving ? (
+                                      <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Saving...</span></>
+                                    ) : (
+                                      <><Save className="w-3.5 h-3.5" /><span>Save Notes</span></>
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedCorpusId(null)}
+                                    className="bg-stone-800 hover:bg-stone-700 text-stone-400 font-bold text-[10px] uppercase px-3 py-1.5 border border-stone-700 transition-colors cursor-pointer"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
                             {/* Actions block */}
-                            <div className="border-t border-stone-900 pt-3 flex items-center justify-between gap-2 mt-auto">
+                            <div className="border-t border-stone-900 px-5 py-3 flex items-center justify-between gap-2 mt-auto">
                               <span className="text-[9px] text-stone-600">DATE PLANNED: {new Date(item.created_at || Date.now()).toLocaleDateString()}</span>
-                              
-                              {item.status === 'backlog' && (
-                                <button
-                                  type="button"
-                                  disabled={arthurPublishingId !== null}
-                                  onClick={() => handleArthurPublish(item)}
-                                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase px-3 py-1.5 border border-black shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
-                                >
-                                  {isPublishing ? (
-                                    <>
-                                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
-                                      <span>ARTHUR DRAFTING...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Globe className="w-3.5 h-3.5 shrink-0" />
-                                      <span>🤖 Auto-Publish</span>
-                                    </>
-                                  )}
-                                </button>
-                              )}
 
-                              {item.status === 'in_progress' && (
-                                <span className="text-yellow-500 font-bold flex items-center space-x-1 text-[10px]">
-                                  <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping shrink-0" />
-                                  <span>Automator Engaged</span>
-                                </span>
-                              )}
+                              <div className="flex items-center gap-1.5">
+                                {/* Expand notes editor button — only for backlog items */}
+                                {item.status === 'backlog' && (
+                                  <button
+                                    type="button"
+                                    title={isExpanded ? 'Close notes editor' : 'Add your takes & talking points'}
+                                    onClick={() => {
+                                      if (isExpanded) {
+                                        setExpandedCorpusId(null);
+                                      } else {
+                                        setCorpusEditNotes(prev => ({ ...prev, [item.id]: item.notes }));
+                                        setExpandedCorpusId(item.id);
+                                      }
+                                    }}
+                                    className={`font-bold text-[10px] uppercase px-2.5 py-1.5 border transition-colors cursor-pointer flex items-center space-x-1 ${
+                                      isExpanded
+                                        ? 'bg-rose-900 border-rose-700 text-rose-300'
+                                        : 'bg-stone-900 hover:bg-stone-800 border-stone-700 hover:border-rose-600 text-stone-400 hover:text-rose-400'
+                                    }`}
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                                    <span>{isExpanded ? 'Close' : 'Edit Notes'}</span>
+                                  </button>
+                                )}
 
-                              {item.status === 'published' && (
-                                <a
-                                  href={item.published_url || '#reviews'}
-                                  onClick={(e) => {
-                                    if (!item.published_url) e.preventDefault();
-                                    onClose();
-                                  }}
-                                  className="bg-stone-900 border border-stone-850 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-3 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
-                                >
-                                  <Check className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
-                                  <span>View Live Review</span>
-                                </a>
-                              )}
+                                {item.status === 'backlog' && (
+                                  <button
+                                    type="button"
+                                    disabled={arthurPublishingId !== null}
+                                    onClick={() => handleArthurPublish(item)}
+                                    className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] uppercase px-3 py-1.5 border border-black shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer flex items-center space-x-1 disabled:opacity-50"
+                                  >
+                                    {isPublishing ? (
+                                      <>
+                                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                                        <span>ARTHUR DRAFTING...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Globe className="w-3.5 h-3.5 shrink-0" />
+                                        <span>🤖 Auto-Publish</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+
+                                {item.status === 'in_progress' && (
+                                  <span className="text-yellow-500 font-bold flex items-center space-x-1 text-[10px]">
+                                    <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping shrink-0" />
+                                    <span>Automator Engaged</span>
+                                  </span>
+                                )}
+
+                                {item.status === 'published' && (
+                                  <a
+                                    href={item.published_url || '#reviews'}
+                                    onClick={(e) => {
+                                      if (!item.published_url) e.preventDefault();
+                                      onClose();
+                                    }}
+                                    className="bg-stone-900 border border-stone-850 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-3 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                                  >
+                                    <Check className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                                    <span>View Live Review</span>
+                                  </a>
+                                )}
+
+                                {/* Per-item purge — hidden while the automator has this card locked */}
+                                {item.status !== 'in_progress' && (
+                                  <button
+                                    type="button"
+                                    title="Incinerate this topic"
+                                    onClick={() => handleDeleteCorpusItem(item.id)}
+                                    className="bg-stone-900 hover:bg-red-900 border border-stone-800 hover:border-red-700 text-stone-500 hover:text-red-400 font-bold text-[10px] uppercase px-2 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
                           </div>

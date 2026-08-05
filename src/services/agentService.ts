@@ -12,6 +12,57 @@ export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
   return data || [];
 }
 
+export async function deleteCorpusItem(id: string): Promise<void> {
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+  const { error } = await client
+    .from('content_corpus')
+    .delete()
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateCorpusItem(
+  id: string,
+  updates: { notes?: string; title?: string }
+): Promise<void> {
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+  const { error } = await client
+    .from('content_corpus')
+    .update(updates)
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+export async function clearCorpusBacklog(statusFilter: 'backlog' | 'published' | 'all' = 'backlog'): Promise<number> {
+  const client = getSupabaseClient() as any;
+  if (!client) throw new Error('Database client not initialized');
+
+  // First fetch the matching IDs so we know how many we deleted
+  let query = client.from('content_corpus').select('id');
+  if (statusFilter !== 'all') {
+    query = statusFilter === 'backlog'
+      ? query.in('status', ['backlog'])
+      : query.in('status', ['backlog', 'published']);
+  } else {
+    // 'all' excludes in_progress items to avoid clearing active jobs
+    query = query.not('status', 'eq', 'in_progress');
+  }
+
+  const { data: toDelete, error: fetchErr } = await query;
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!toDelete || toDelete.length === 0) return 0;
+
+  const ids = toDelete.map((r: any) => r.id);
+  const { error: deleteErr } = await client
+    .from('content_corpus')
+    .delete()
+    .in('id', ids);
+  if (deleteErr) throw new Error(deleteErr.message);
+  return ids.length;
+}
+
 export async function triggerLucyBrainstorm(geminiApiKey: string, searchQuery?: string): Promise<void> {
   const client = getSupabaseClient() as any;
   if (!client) throw new Error('Database client not initialized');
@@ -62,7 +113,7 @@ You MUST respond with a raw JSON array matching this schema. Do not add any back
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         tools: [{ google_search: {} }],
         generationConfig: {
-          maxOutputTokens: 3000,
+          maxOutputTokens: 8192,
           temperature: 0.7,
         },
       }),
@@ -74,13 +125,33 @@ You MUST respond with a raw JSON array matching this schema. Do not add any back
   }
 
   const result = await response.json();
-  const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from Gemini');
 
+  // When Google Search grounding is active, Gemini may split content across
+  // multiple parts. Join them all to avoid truncation/unterminated string errors.
+  const parts: any[] = result.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.map((p: any) => p.text ?? '').join('');
+  if (!text.trim()) throw new Error('Empty response from Gemini');
+
+  // Strip markdown code fences if the model ignored the instruction
   let cleanText = text.trim();
   if (cleanText.startsWith('```')) {
-    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    cleanText = cleanText.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
   }
+
+  // Bracket-match extract: pull the first [...] array out of the text in case
+  // there's any leading/trailing prose the model accidentally added.
+  function extractJsonArray(raw: string): string {
+    const start = raw.indexOf('[');
+    if (start === -1) return raw;
+    let depth = 0;
+    for (let i = start; i < raw.length; i++) {
+      if (raw[i] === '[') depth++;
+      else if (raw[i] === ']') { depth--; if (depth === 0) return raw.slice(start, i + 1); }
+    }
+    return raw.slice(start); // unterminated — return what we have for a better error
+  }
+
+  cleanText = extractJsonArray(cleanText);
 
   const trends = JSON.parse(cleanText);
   for (const item of trends) {
