@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail 
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw
 } from 'lucide-react';
 import { Article, GuestbookEntry, CorpusItem } from '../types';
 import { 
@@ -252,6 +252,25 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       alert(`Lucy Strategy Compilation Failed: ${err.message}`);
     } finally {
       setIsLucyRunning(false);
+    }
+  };
+
+  const handleArthurRepublish = async (item: CorpusItem) => {
+    if (!window.confirm(`Re-publish "${item.title}"? Arthur will generate a brand-new review and add it as a fresh article.`)) return;
+    setArthurPublishingId(item.id);
+    // Reset corpus item to backlog so triggerArthurPublish can pick it up
+    try {
+      await updateCorpusItem(item.id, { status: 'backlog', published_url: null });
+      setCorpusEntries(prev =>
+        prev.map(c => c.id === item.id ? { ...c, status: 'backlog', published_url: undefined } : c)
+      );
+      // Now run Arthur on the reset item
+      const resetItem: CorpusItem = { ...item, status: 'backlog', published_url: undefined };
+      await handleArthurPublish(resetItem);
+    } catch (err: any) {
+      setError(`Re-publish failed: ${err.message}`);
+      setArthurPublishingId(null);
+      await reloadCorpus();
     }
   };
 
@@ -967,17 +986,29 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                                 )}
 
                                 {item.status === 'published' && (
-                                  <a
-                                    href={item.published_url || '#reviews'}
-                                    onClick={(e) => {
-                                      if (!item.published_url) e.preventDefault();
-                                      onClose();
-                                    }}
-                                    className="bg-stone-900 border border-stone-850 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-3 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
-                                  >
-                                    <Check className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
-                                    <span>View Live Review</span>
-                                  </a>
+                                  <>
+                                    <a
+                                      href={item.published_url || '#reviews'}
+                                      onClick={(e) => {
+                                        if (!item.published_url) e.preventDefault();
+                                        onClose();
+                                      }}
+                                      className="bg-stone-900 border border-stone-850 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-3 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
+                                    >
+                                      <Check className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                                      <span>View Live Review</span>
+                                    </a>
+                                    <button
+                                      type="button"
+                                      disabled={arthurPublishingId !== null}
+                                      onClick={() => handleArthurRepublish(item)}
+                                      title="Re-generate and publish a fresh review for this topic"
+                                      className="bg-stone-800 hover:bg-emerald-900 border border-stone-700 hover:border-emerald-600 text-stone-400 hover:text-emerald-300 font-bold text-[10px] uppercase px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                      <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                                      <span>Re-publish</span>
+                                    </button>
+                                  </>
                                 )}
 
                                 {/* Per-item purge — hidden while the automator has this card locked */}
