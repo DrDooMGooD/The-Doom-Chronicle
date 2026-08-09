@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+// @ts-ignore
+import drDoomImage from '../assets/dr_doom.jpg';
 import { Shield, Skull, Eye, HelpCircle, Sparkles, AlertCircle, Brain, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 
 interface DoomIntroProps {
@@ -71,8 +73,8 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
   const [imageClicks, setImageClicks] = useState(0);
   const [clickMessage, setClickMessage] = useState<string | null>(null);
 
-  // Image Source state with robust fallbacks
-  const [imgUrl, setImgUrl] = useState('https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47');
+  // Image Source state — using local asset
+  const [imgUrl, setImgUrl] = useState<string>(drDoomImage);
   const [isImgError, setIsImgError] = useState(false);
 
   const handleImageError = () => {

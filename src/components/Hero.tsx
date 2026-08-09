@@ -3,6 +3,8 @@ import { Shield, Sparkles, AlertCircle, Quote, Star } from 'lucide-react';
 import { useState } from 'react';
 // @ts-ignore
 import domPinedaImage from '../assets/dom_pineda-1.jpg';
+// @ts-ignore
+import drDoomImage from '../assets/dr_doom.jpg';
 
 interface HeroProps {
   onExploreClick: () => void;
@@ -14,7 +16,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
   const [isPortraitHovered, setIsPortraitHovered] = useState(false);
 
   // Default Dr. Doom portrait
-  const defaultDoomImage = "https://scontent.fsac1-2.fna.fbcdn.net/v/t1.6435-9/91911962_10156590858810834_6532539154343919616_n.jpg?stp=dst-jpg_tt6&cstp=mx916x916&ctp=s916x916&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=EX83k_UbQFsQ7kNvwE23SBR&_nc_oc=AdrOQ-L3PYRerarsOctq4WfFfhq7dMW47NEZeeB-1q3v_lYp78JfTWcsXBrxsOKMKH3pFZyYdu9c5nio4bR5qmi_&_nc_zt=23&_nc_ht=scontent.fsac1-2.fna&_nc_gid=4ReUjnNPAdhH14KO3uedug&_nc_ss=7b2a8&oh=00_Af_9nAYKpxHYYIk09eURTYnRO6ClRfR4gWOXSbE_vG7wXw&oe=6A668F47";
+  const defaultDoomImage = drDoomImage;
 
   // Use the imported high-res user photo as the hover/alternate image (State-Appointed Chronicler Dom Pineda)
   const hoverDoomImage = domPinedaImage;
