@@ -30,7 +30,7 @@ const portals = [
     accent: 'bg-emerald-600',
     border: 'border-emerald-700',
     hoverShadow: 'hover:shadow-[8px_8px_0px_0px_rgba(4,120,87,1)]',
-    badge: '💬 AI COUNSEL',
+    badge: '💬 PETITION',
     badgeBg: 'bg-emerald-700',
     skewClass: 'skew-comic-r',
     number: '02',

@@ -80,7 +80,7 @@ export default function DoomCounsel() {
             STATE ADVISORY DECK
           </span>
           <h2 className="font-comic text-5xl text-white uppercase tracking-wider">
-            ASK DOOM'S COUNSEL
+            SUBMIT YOUR PETITION
           </h2>
           <p className="font-mono text-xs text-stone-300 mt-2">
             SUBMIT YOUR INQUIRIES DIRECTLY TO THE THRONE OF LATVERIA
@@ -129,7 +129,7 @@ export default function DoomCounsel() {
 
               {/* Custom input form */}
               <form onSubmit={handleAskDoom} className="space-y-3">
-                <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase">ENTER INQUIRY:</label>
+                <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase">YOUR PETITION:</label>
                 <div className="relative">
                   <input
                     type="text"
