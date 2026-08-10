@@ -1,17 +1,30 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Skull, BookOpen, PenTool, MessageSquare, Eye, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface NavbarProps {
-  onScrollToSection: (id: string) => void;
-  activeSection: string;
   onReplayIntro: () => void;
   onToggleCMS: () => void;
   showCMS: boolean;
 }
 
-export default function Navbar({ onScrollToSection, activeSection, onReplayIntro, onToggleCMS, showCMS }: NavbarProps) {
+const navItems = [
+  { route: '/',          label: 'Throne Room',       icon: <Skull      className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" /> },
+  { route: '/vault',     label: 'Sovereign Reviews',  icon: <BookOpen   className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" /> },
+  { route: '/counsel',   label: "Doom's Counsel",     icon: <MessageSquare className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> },
+  { route: '/guestbook', label: 'Sovereign Registry', icon: <PenTool    className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" /> },
+];
+
+export default function Navbar({ onReplayIntro, onToggleCMS, showCMS }: NavbarProps) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleNav = (route: string) => {
+    navigate(route);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <nav
@@ -19,14 +32,13 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
       className="fixed top-0 left-0 right-0 z-50 bg-stone-950 border-b-4 border-black text-white py-3 px-3 font-mono shadow-comic"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        
-        {/* Brand Logo: Collapses text from DOOM CHRONICLE -> DOOM on narrow mobile ports */}
+
+        {/* Brand Logo */}
         <div
           id="doom-logo"
           onClick={() => {
             if (showCMS) onToggleCMS();
-            onScrollToSection('hero');
-            setMobileMenuOpen(false);
+            handleNav('/');
           }}
           className="flex items-center space-x-1.5 sm:space-x-2.5 cursor-pointer group bg-gradient-to-r from-emerald-850 via-emerald-750 to-emerald-950 hover:from-rose-800 hover:via-rose-750 hover:to-rose-950 border-3 border-black px-2 sm:px-4 py-1.5 sm:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all glossy-highlight rounded-xs"
         >
@@ -42,21 +54,15 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
           </span>
         </div>
 
-        {/* Desktop Links: Visible on lg screen widths */}
+        {/* Desktop Links */}
         <div id="doom-nav-links" className="hidden lg:flex items-center space-x-1">
-          {[
-            { id: 'hero', label: 'Throne Room', icon: <Skull className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" /> },
-            { id: 'reviews', label: 'Sovereign Reviews', icon: <BookOpen className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" /> },
-            { id: 'counsel', label: 'Doom\'s Counsel', icon: <MessageSquare className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> },
-            { id: 'tribute', label: 'Sovereign Registry', icon: <PenTool className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" /> }
-          ].map((item) => {
-            const isActive = activeSection === item.id && !showCMS;
+          {navItems.map((item) => {
+            const isActive = pathname === item.route && !showCMS;
             return (
               <button
-                key={item.id}
-                disabled={showCMS}
-                onClick={() => onScrollToSection(item.id)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 font-bold text-xs uppercase border-2 transition-all cursor-pointer group disabled:opacity-50 disabled:cursor-not-allowed ${
+                key={item.route}
+                onClick={() => handleNav(item.route)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 font-bold text-xs uppercase border-2 transition-all cursor-pointer group ${
                   isActive
                     ? 'bg-emerald-700 text-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5'
                     : 'bg-transparent text-stone-300 border-transparent hover:text-rose-400 hover:border-black hover:bg-stone-900/60 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
@@ -80,7 +86,7 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
 
         {/* Right side controls */}
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* CMS dashboard toggle button */}
+          {/* CMS toggle */}
           <button
             onClick={() => {
               onToggleCMS();
@@ -97,7 +103,7 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             <span className="xs:hidden">{showCMS ? 'Exit' : 'Control'}</span>
           </button>
 
-          {/* Mobile Menu Hamburger Icon Button */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden flex items-center justify-center p-1.5 bg-stone-900 border-2 border-black text-white hover:text-rose-450 hover:bg-stone-850 cursor-pointer shadow-[2.5px_2.5px_0px_rgba(0,0,0,1)]"
@@ -106,7 +112,7 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          {/* Flag indicator (Hidden on mobile) */}
+          {/* Latverian flag (hidden on mobile) */}
           <div className="hidden md:flex items-center shrink-0">
             <div className="relative flex flex-col items-center shrink-0 mr-1.5">
               <div className="w-2.5 h-2.5 bg-gradient-to-r from-[#fef5d1] via-[#facc15] to-[#ca8a04] rounded-full border border-black shadow-sm z-20 animate-pulse" />
@@ -125,7 +131,7 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
 
       </div>
 
-      {/* Mobile Menu Dropdown drawer */}
+      {/* Mobile dropdown */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -134,20 +140,15 @@ export default function Navbar({ onScrollToSection, activeSection, onReplayIntro
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden mt-3 border-t-2 border-black bg-stone-950 px-2 py-3 space-y-1 font-mono text-[11px] uppercase"
           >
-            {[
-              { id: 'hero', label: 'Throne Room', icon: <Skull className="w-3.5 h-3.5" /> },
-              { id: 'reviews', label: 'Sovereign Reviews', icon: <BookOpen className="w-3.5 h-3.5" /> },
-              { id: 'counsel', label: 'Doom\'s Counsel', icon: <MessageSquare className="w-3.5 h-3.5" /> },
-              { id: 'tribute', label: 'Sovereign Registry', icon: <PenTool className="w-3.5 h-3.5" /> }
-            ].map((item) => (
+            {navItems.map((item) => (
               <button
-                key={item.id}
-                disabled={showCMS}
-                onClick={() => {
-                  onScrollToSection(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center space-x-2 py-2.5 px-3 text-stone-300 hover:text-emerald-450 border-b border-stone-900 disabled:opacity-50 text-left cursor-pointer"
+                key={item.route}
+                onClick={() => handleNav(item.route)}
+                className={`w-full flex items-center space-x-2 py-2.5 px-3 border-b border-stone-900 text-left cursor-pointer transition-colors ${
+                  pathname === item.route
+                    ? 'text-emerald-400'
+                    : 'text-stone-300 hover:text-emerald-450'
+                }`}
               >
                 {item.icon}
                 <span>{item.label}</span>
