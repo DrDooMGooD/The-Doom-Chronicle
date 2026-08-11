@@ -330,6 +330,10 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       alert(`🤖 ARTHUR: Generated review draft, pushed it live to your site, and recorded URL!\n\nReview: "${item.title}"`);
     } catch (err: any) {
       alert(`Arthur Auto-Publish Failed: ${err.message}`);
+      // Roll the item back to backlog so it can be retried
+      try {
+        await updateCorpusItem(item.id, { status: 'backlog' });
+      } catch (_) { /* best-effort — reload will show current state */ }
       await reloadCorpus();
     } finally {
       setArthurPublishingId(null);
@@ -1038,10 +1042,27 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                                 )}
 
                                 {item.status === 'in_progress' && (
-                                  <span className="text-yellow-500 font-bold flex items-center space-x-1 text-[10px]">
-                                    <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping shrink-0" />
-                                    <span>Automator Engaged</span>
-                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-yellow-500 font-bold flex items-center space-x-1 text-[10px]">
+                                      <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-ping shrink-0" />
+                                      <span>Automator Engaged</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      title="Reset this stuck item back to backlog so it can be retried"
+                                      onClick={async () => {
+                                        try {
+                                          await updateCorpusItem(item.id, { status: 'backlog' });
+                                          await reloadCorpus();
+                                        } catch (e: any) {
+                                          alert(`Reset failed: ${e.message}`);
+                                        }
+                                      }}
+                                      className="bg-stone-800 hover:bg-yellow-900 border border-stone-700 hover:border-yellow-600 text-stone-500 hover:text-yellow-300 font-bold text-[10px] uppercase px-2 py-1 flex items-center space-x-1 transition-colors cursor-pointer"
+                                    >
+                                      <span>↩ Reset</span>
+                                    </button>
+                                  </div>
                                 )}
 
                                 {item.status === 'published' && (

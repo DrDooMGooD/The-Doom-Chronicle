@@ -24,7 +24,7 @@ export async function deleteCorpusItem(id: string): Promise<void> {
 
 export async function updateCorpusItem(
   id: string,
-  updates: { notes?: string; title?: string }
+  updates: { notes?: string; title?: string; status?: string; published_url?: string | null }
 ): Promise<void> {
   const client = getSupabaseClient() as any;
   if (!client) throw new Error('Database client not initialized');
