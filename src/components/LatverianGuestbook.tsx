@@ -321,43 +321,47 @@ export default function LatverianGuestbook() {
                       exit={{ opacity: 0, x: -10 }}
                       className="bg-stone-900 border-2 border-black p-4 relative shadow-comic"
                     >
-                      {/* Allegiance Badge Tag */}
-                      <span className={`absolute -top-3.5 right-4 border-2 border-black text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-sm shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] ${
-                        entry.allegiance === 'loyalist'
-                          ? 'bg-emerald-700 text-white'
-                          : entry.allegiance === 'doombot'
-                          ? 'bg-stone-950 text-stone-400 border-stone-800'
-                          : 'bg-red-600 text-white'
-                      }`}>
-                        {entry.allegiance}
-                      </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-800/80 pb-2.5 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-comic text-lg sm:text-xl text-emerald-400 tracking-wide uppercase">
+                            {entry.name}
+                          </span>
+                          <span className="text-xs font-mono text-stone-400 font-semibold uppercase">
+                            OF {entry.country}
+                          </span>
+                        </div>
 
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="font-comic text-lg text-emerald-400 tracking-wide uppercase">
-                          {entry.name}
-                        </span>
-                        <span className="text-[10px] font-mono text-stone-500 font-semibold uppercase">
-                          OF {entry.country}
+                        {/* Allegiance Badge Tag */}
+                        <span className={`border-2 border-black text-xs font-mono font-bold uppercase px-2.5 py-1 rounded-xs shadow-[2px_2px_0px_rgba(0,0,0,1)] shrink-0 ${
+                          entry.allegiance === 'loyalist'
+                            ? 'bg-emerald-700 text-white'
+                            : entry.allegiance === 'doombot'
+                            ? 'bg-stone-950 text-stone-400 border-stone-800'
+                            : 'bg-red-600 text-white'
+                        }`}>
+                          {entry.allegiance}
                         </span>
                       </div>
 
-                      <p className="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed italic border-l-2 border-red-500 pl-3 bg-stone-950/40 py-1.5">
+                      <p className="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed italic border-l-3 border-red-500 pl-3 bg-stone-950/40 py-2">
                         "{entry.tribute}"
                       </p>
 
                       {entry.response && (
-                        <div className="mt-3 bg-emerald-950/20 border-l-4 border-emerald-600 p-3 text-xs sm:text-sm text-emerald-400 italic font-medium relative font-sans">
-                          <span className="absolute -top-2 right-2 bg-emerald-700 text-black text-[8px] font-bold px-1.5 py-0.5 border border-black uppercase font-mono shadow-[1px_1px_0px_rgba(0,0,0,1)] tracking-wider">
-                            👑 SOVEREIGN REPLY
-                          </span>
-                          <span>"{entry.response}"</span>
+                        <div className="mt-3 bg-emerald-950/30 border-l-4 border-emerald-500 p-3 text-xs sm:text-sm text-emerald-300 italic font-medium font-sans space-y-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 border border-black uppercase font-mono shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] tracking-wider">
+                              👑 SOVEREIGN REPLY
+                            </span>
+                          </div>
+                          <p>"{entry.response}"</p>
                         </div>
                       )}
 
-                      <div className="mt-2 text-[9px] font-mono text-stone-500 flex justify-between items-center">
+                      <div className="mt-3 pt-2 border-t border-stone-850 text-xs font-mono text-stone-400 flex flex-wrap justify-between items-center gap-2">
                         <span>TIMESTAMP SECURE: {new Date(entry.timestamp).toLocaleDateString()}</span>
-                        <span className="text-emerald-500 font-bold uppercase flex items-center space-x-1">
-                          <CheckCircle className="w-3 h-3 text-emerald-500" />
+                        <span className="text-emerald-400 font-bold uppercase flex items-center space-x-1 text-xs">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
                           <span>VERIFIED BY CASTLE CLERKS</span>
                         </span>
                       </div>

@@ -953,14 +953,13 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                         const editNotes = corpusEditNotes[item.id] ?? item.notes;
                         return (
                           <div key={item.id} className="bg-stone-950 border border-stone-800 relative shadow-comic flex flex-col justify-between uppercase font-mono text-xs">
-                            
-                            {/* Category Tag */}
-                            <span className="absolute -top-3 right-4 border border-black text-[9px] font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase bg-stone-900 text-stone-300">
-                              {item.category === 'game' ? '🎮 GAME' : item.category === 'comic' ? '📚 COMIC' : '🎬 MOVIE'}
-                            </span>
-
                             <div className="p-5 space-y-3">
-                              <h4 className="font-comic text-base text-emerald-400 tracking-wide leading-tight mt-1">{item.title}</h4>
+                              <div className="flex items-start justify-between gap-3 border-b border-stone-850 pb-2 mb-1">
+                                <h4 className="font-comic text-base text-emerald-400 tracking-wide leading-tight">{item.title}</h4>
+                                <span className="border border-black text-xs font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase bg-stone-900 text-yellow-400 shrink-0">
+                                  {item.category === 'game' ? '🎮 GAME' : item.category === 'comic' ? '📚 COMIC' : '🎬 MOVIE'}
+                                </span>
+                              </div>
                               
                               {item.notes && !isExpanded && (
                                 <p className="text-stone-300 text-xs font-sans normal-case bg-stone-900/50 border-l border-emerald-700 pl-2.5 py-1 leading-relaxed line-clamp-3">
