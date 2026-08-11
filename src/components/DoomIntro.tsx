@@ -164,11 +164,11 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="w-full flex flex-col items-center text-center px-4 mb-6"
             >
-              <div className="bg-red-600 text-white font-comic text-xs uppercase px-3 py-1.5 border-2 border-black rotate-[-1deg] shadow-comic flex items-center space-x-2">
-                <Skull className="w-4 h-4 fill-current" />
+              <div className="bg-red-600 text-white font-comic text-sm sm:text-base font-bold uppercase px-4 py-2 border-3 border-black rotate-[-1deg] shadow-comic flex items-center space-x-2">
+                <Skull className="w-5 h-5 fill-current" />
                 <span>LATVERIA SECURITY GATEWAY</span>
               </div>
-              <p className="text-[9px] sm:text-[10px] text-stone-500 font-bold uppercase mt-3 tracking-widest px-2">
+              <p className="text-xs sm:text-sm text-stone-300 font-bold uppercase mt-3 tracking-widest px-2">
                 TRIVIA OVERRIDE ONLINE • PROVE YOUR INTELLECT TO LORD DOOM
               </p>
             </motion.div>
@@ -263,8 +263,8 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                   className="flex-grow flex flex-col justify-between bg-stone-900 border-4 border-black p-4 sm:p-6 shadow-comic relative rounded-lg"
                 >
                   {/* Supreme Stamp */}
-                  <div className="absolute -top-3 right-4 bg-emerald-600 border-2 border-black text-white font-comic text-[9px] sm:text-[10px] uppercase px-2.5 py-1 rotate-[2deg] shadow-comic flex items-center space-x-1.5 z-10">
-                    <Brain className="w-3.5 h-3.5" />
+                  <div className="absolute -top-3.5 right-4 bg-emerald-600 border-2 border-black text-white font-comic text-xs sm:text-sm font-bold uppercase px-3.5 py-1.5 rotate-[2deg] shadow-comic flex items-center space-x-2 z-10">
+                    <Brain className="w-4 h-4" />
                     <span>INTELLECT CONFIRMATION</span>
                   </div>
 
@@ -385,17 +385,17 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                 <h1 className="font-comic text-lg sm:text-xl md:text-2xl text-white uppercase tracking-wider mb-1 leading-tight">
                   THE DOOM CHRONICLE
                 </h1>
-                <p className="font-sans font-medium text-stone-300 text-[10px] sm:text-xs leading-relaxed">
+                <p className="font-sans font-medium text-stone-200 text-xs sm:text-sm leading-relaxed">
                   "Welcome to my sovereign archive of sequential arts. Here, the opinion of uninformed peasants is abolished. My judgment is flawless, absolute, and ironclad."
                 </p>
-                <p className="text-[8px] sm:text-[9px] text-emerald-400 font-bold font-mono mt-2 uppercase tracking-widest text-center">
+                <p className="text-xs sm:text-sm text-emerald-400 font-bold font-mono mt-2 uppercase tracking-widest text-center">
                   — VICTOR VON DOOM, SOVEREIGN LORD
                 </p>
               </div>
 
               {/* Direct Entry Button (Made highly apparent and styled) */}
               <div className="flex flex-col items-center space-y-2 pt-1">
-                <span className="text-[9px] sm:text-[10px] text-stone-500 uppercase tracking-widest font-bold">
+                <span className="text-xs sm:text-sm text-stone-300 uppercase tracking-widest font-bold">
                   Tired of Gatekeeper Trials?
                 </span>
                 
@@ -403,7 +403,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                   <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-emerald-400 rounded blur opacity-25 group-hover:opacity-45 transition duration-300" />
                   <button
                     onClick={onComplete}
-                    className="relative bg-stone-900 hover:bg-stone-850 text-emerald-400 hover:text-emerald-300 font-comic text-xs uppercase px-5 py-2 border-2 border-emerald-950 hover:border-emerald-600 shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_rgba(0,0,0,1)] transition-all cursor-pointer tracking-wider"
+                    className="relative bg-stone-900 hover:bg-stone-850 text-emerald-400 hover:text-emerald-300 font-comic text-xs sm:text-sm uppercase px-6 py-2.5 border-2 border-emerald-950 hover:border-emerald-600 shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_rgba(0,0,0,1)] transition-all cursor-pointer tracking-wider font-bold"
                   >
                     ⚡ DIRECT ENTRY (Skip Security Gate)
                   </button>
@@ -416,8 +416,8 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
 
         {/* Cinematic Ambient Status Labels */}
         {!isZooming && (
-          <div className="hidden sm:flex absolute bottom-4 left-4 text-[9px] font-mono text-stone-600 uppercase items-center space-x-1.5 select-none">
-            <Shield className="w-3.5 h-3.5 animate-spin text-stone-600" />
+          <div className="hidden sm:flex absolute bottom-4 left-4 text-xs font-mono text-stone-400 uppercase items-center space-x-2 select-none font-bold">
+            <Shield className="w-4 h-4 animate-spin text-emerald-500" />
             <span>[SYSTEM: TRIVIA PROTOCOLS ACTIVE • DIRECT ENTRY POWERED]</span>
           </div>
         )}

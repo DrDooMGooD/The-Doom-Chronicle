@@ -219,17 +219,17 @@ export default function TributeWishlist() {
                         {/* Priority Badge */}
                         <div className="absolute top-3 left-3">
                           {isFulfilled ? (
-                            <span className="bg-emerald-600 text-white font-mono text-[10px] font-bold px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase flex items-center space-x-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span className="bg-emerald-600 text-white font-mono text-xs font-bold px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase flex items-center space-x-1.5">
+                              <CheckCircle2 className="w-4 h-4" />
                               <span>Fulfilled</span>
                             </span>
                           ) : isHigh ? (
-                            <span className="bg-red-600 text-white font-mono text-[10px] font-bold px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase flex items-center space-x-1 animate-pulse">
-                              <Sparkles className="w-3.5 h-3.5" />
+                            <span className="bg-red-600 text-white font-mono text-xs font-bold px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase flex items-center space-x-1.5 animate-pulse">
+                              <Sparkles className="w-4 h-4" />
                               <span>High Priority</span>
                             </span>
                           ) : (
-                            <span className="bg-yellow-500 text-black font-mono text-[10px] font-bold px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
+                            <span className="bg-yellow-500 text-black font-mono text-xs font-bold px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
                               Wanted
                             </span>
                           )}
@@ -237,7 +237,7 @@ export default function TributeWishlist() {
 
                         {/* Category & Price Pill */}
                         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                          <span className="bg-black/90 text-yellow-400 font-mono text-[10px] font-bold px-2 py-1 border border-yellow-500/50 uppercase">
+                          <span className="bg-black/90 text-yellow-400 font-mono text-xs font-bold px-2.5 py-1 border border-yellow-500/50 uppercase">
                             {item.category}
                           </span>
                           <span className="bg-emerald-950 border border-emerald-500 text-emerald-300 font-mono font-bold text-xs px-2.5 py-1">

@@ -669,7 +669,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                     return (
                       <div key={entry.id} className="bg-stone-950 border border-stone-800 p-5 relative shadow-comic uppercase font-mono text-xs">
                         {/* Allegiance Tag */}
-                        <span className={`absolute -top-3 right-4 border border-black text-[9px] font-bold px-2 py-0.5 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase ${
+                        <span className={`absolute -top-3 right-4 border border-black text-xs font-bold px-2.5 py-1 shadow-[1.5px_1.5px_0px_rgba(0,0,0,1)] uppercase ${
                           entry.allegiance === 'loyalist'
                             ? 'bg-emerald-700 text-white'
                             : entry.allegiance === 'doombot'

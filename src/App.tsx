@@ -37,7 +37,7 @@ function SiteFooter({ onReplayIntro }: { onReplayIntro: () => void }) {
               guidance of Victor von Doom, ruler of Latveria. All reviews of cinema, comic books,
               and digital simulations are legally binding under Latverian Sovereign law.
             </p>
-            <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider flex items-center space-x-1.5 bg-black/50 border border-emerald-950 p-2 max-w-sm">
+            <div className="text-xs text-emerald-400 font-bold uppercase tracking-wider flex items-center space-x-2 bg-black/60 border border-emerald-900 p-2.5 max-w-md">
               <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>RULING SINCE 1962. ZERO UNEMPLOYMENT. ZERO DEFIANCE.</span>
             </div>
@@ -92,9 +92,9 @@ function SiteFooter({ onReplayIntro }: { onReplayIntro: () => void }) {
               <li className="border-t border-stone-800 pt-2 mt-2">
                 <button
                   onClick={onReplayIntro}
-                  className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer flex items-center space-x-1 text-[11px]"
+                  className="text-rose-400 hover:text-rose-300 transition-colors cursor-pointer flex items-center space-x-1.5 text-xs font-bold"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  <Eye className="w-4 h-4" />
                   <span>🎬 REPLAY STATE CINEMATIC</span>
                 </button>
               </li>
@@ -104,12 +104,12 @@ function SiteFooter({ onReplayIntro }: { onReplayIntro: () => void }) {
           {/* Latveria state banner */}
           <div className="md:col-span-3 flex flex-col justify-between items-start md:items-end bg-stone-900 border-2 border-black p-4 shadow-comic">
             <div className="text-right w-full">
-              <span className="block text-[11px] font-bold text-emerald-500">LATVERIA BORDER DEFENSE</span>
-              <span className="block text-[9px] text-stone-400 mt-0.5">DOOMBOT DIVISION-79 SECURE</span>
+              <span className="block text-xs font-bold text-emerald-400 tracking-wide">LATVERIA BORDER DEFENSE</span>
+              <span className="block text-[11px] font-bold text-stone-300 mt-0.5">DOOMBOT DIVISION-79 SECURE</span>
             </div>
-            <div className="mt-4 flex space-x-1.5 w-full justify-between items-center text-[10px] text-stone-500 border-t border-stone-800 pt-2">
+            <div className="mt-4 flex space-x-1.5 w-full justify-between items-center text-xs font-bold text-stone-400 border-t border-stone-800 pt-2">
               <span>POPULATION: 100% LOYAL</span>
-              <span className="bg-red-600 text-white font-bold px-1 rounded-sm">LIVE</span>
+              <span className="bg-red-600 text-white font-bold px-1.5 py-0.5 rounded-sm">LIVE</span>
             </div>
           </div>
 

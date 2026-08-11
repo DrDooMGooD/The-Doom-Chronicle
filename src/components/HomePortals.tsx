@@ -80,7 +80,7 @@ export default function HomePortals() {
       {/* Section header */}
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="mb-12 text-center">
-          <span className="inline-block font-mono text-xs font-bold text-rose-500 uppercase tracking-[0.3em] bg-black px-4 py-1 border border-rose-500/40 mb-4">
+          <span className="inline-block font-mono text-sm font-bold text-rose-500 uppercase tracking-[0.3em] bg-black px-4 py-1.5 border border-rose-500/40 mb-4">
             LATVERIAN SOVEREIGN ARCHIVES — CLASSIFIED: OPEN ACCESS
           </span>
           <h2 className="font-comic text-5xl sm:text-6xl uppercase text-white text-shadow-doom tracking-wider">
@@ -115,7 +115,7 @@ export default function HomePortals() {
                 {/* Badge + Icon */}
                 <div className="flex items-center justify-between mb-5">
                   <span
-                    className={`font-mono text-[10px] font-bold text-white uppercase tracking-widest ${portal.badgeBg} px-2 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`}
+                    className={`font-mono text-xs font-bold text-white uppercase tracking-widest ${portal.badgeBg} px-2.5 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`}
                   >
                     {portal.badge}
                   </span>
@@ -130,7 +130,7 @@ export default function HomePortals() {
                 </h3>
 
                 {/* Tagline */}
-                <p className={`font-mono text-[11px] font-bold uppercase tracking-widest mb-4 ${
+                <p className={`font-mono text-xs font-bold uppercase tracking-widest mb-4 ${
                   portal.id === 'vault' ? 'text-red-400' :
                   portal.id === 'counsel' ? 'text-emerald-400' : 'text-yellow-400'
                 }`}>
@@ -162,7 +162,7 @@ export default function HomePortals() {
         </div>
 
         {/* Bottom decree line */}
-        <p className="mt-8 text-center font-mono text-[11px] text-stone-600 uppercase tracking-widest">
+        <p className="mt-8 text-center font-mono text-xs font-bold text-stone-400 uppercase tracking-widest">
           ALL CONTENT IS LEGALLY BINDING UNDER LATVERIAN SOVEREIGN DECREE № 1962-VII
         </p>
       </div>

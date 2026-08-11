@@ -269,11 +269,11 @@ export default function ReviewVault() {
                   
                   <div>
                     {/* Header: Date and category */}
-                    <div className="flex items-center justify-between mb-3 text-[10px] font-mono font-bold text-stone-400">
-                      <span className="bg-stone-900 border border-stone-800 px-2 py-0.5 uppercase flex items-center space-x-1">
-                        {article.category === 'game' && <Gamepad2 className="w-3 h-3 text-emerald-400" />}
-                        {article.category === 'comic' && <Book className="w-3 h-3 text-rose-500" />}
-                        {article.category === 'movie' && <Film className="w-3 h-3 text-red-500" />}
+                    <div className="flex items-center justify-between mb-3 text-xs font-mono font-bold text-stone-300">
+                      <span className="bg-stone-900 border border-stone-800 px-2.5 py-1 uppercase flex items-center space-x-1.5">
+                        {article.category === 'game' && <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />}
+                        {article.category === 'comic' && <Book className="w-3.5 h-3.5 text-rose-500" />}
+                        {article.category === 'movie' && <Film className="w-3.5 h-3.5 text-red-500" />}
                         <span>{article.category}</span>
                       </span>
                       <span>{article.publishDate}</span>

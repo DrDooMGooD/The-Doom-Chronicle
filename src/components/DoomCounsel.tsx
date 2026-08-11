@@ -119,7 +119,7 @@ export default function DoomCounsel() {
                     >
                       <div>
                         <span className="block font-comic text-sm uppercase tracking-wider">{mood.label}</span>
-                        <span className="block text-[10px] font-sans text-stone-400 font-medium leading-none mt-1">{mood.desc}</span>
+                        <span className="block text-xs font-sans text-stone-300 font-medium leading-tight mt-1">{mood.desc}</span>
                       </div>
                       {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping" />}
                     </button>
@@ -129,7 +129,7 @@ export default function DoomCounsel() {
 
               {/* Custom input form */}
               <form onSubmit={handleAskDoom} className="space-y-3">
-                <label className="block text-stone-400 font-mono text-[10px] font-bold uppercase">YOUR PETITION:</label>
+                <label className="block text-stone-300 font-mono text-xs font-bold uppercase">YOUR PETITION:</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -183,8 +183,8 @@ export default function DoomCounsel() {
                       animate={{ opacity: 1, y: 0 }}
                       className="border border-stone-800 bg-stone-950 p-4 relative"
                     >
-                      <div className="flex items-center justify-between text-[9px] font-mono text-stone-400 mb-2 border-b border-stone-900 pb-1">
-                        <span className="text-red-500 uppercase">SUBJECT ASKED: "{log.query}"</span>
+                      <div className="flex items-center justify-between text-xs font-mono text-stone-300 mb-2 border-b border-stone-900 pb-1">
+                        <span className="text-red-500 uppercase font-bold">SUBJECT ASKED: "{log.query}"</span>
                         <span className="bg-emerald-950 text-emerald-500 px-1 rounded-sm uppercase font-bold">{log.mood}</span>
                       </div>
                       
@@ -197,7 +197,7 @@ export default function DoomCounsel() {
                 </AnimatePresence>
 
                 {isAnswering && (
-                  <div className="flex items-center space-x-2 text-stone-500 font-mono text-xs">
+                  <div className="flex items-center space-x-2 text-stone-400 font-mono text-xs font-bold">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-500" />
                     <span>DOOM IS FORMULATING AN ABSOLUTE DICTUM...</span>
                   </div>
@@ -205,7 +205,7 @@ export default function DoomCounsel() {
               </div>
 
               {/* Base instruction */}
-              <div className="mt-4 pt-3 border-t border-stone-800 text-[11px] font-sans text-stone-400 leading-relaxed italic flex items-center space-x-2">
+              <div className="mt-4 pt-3 border-t border-stone-800 text-xs font-sans text-stone-300 leading-relaxed italic flex items-center space-x-2">
                 <HelpCircle className="w-4 h-4 text-yellow-500 shrink-0" />
                 <span>Submit questions regarding games, cinema, and comic book stories to receive sovereign instruction.</span>
               </div>

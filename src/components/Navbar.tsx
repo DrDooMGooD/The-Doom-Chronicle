@@ -50,7 +50,7 @@ export default function Navbar({ onReplayIntro, onToggleCMS, showCMS }: NavbarPr
           <span className="sm:hidden font-comic text-lg tracking-widest text-white uppercase select-none text-shadow-doom">
             DOOM
           </span>
-          <span className="bg-red-600 text-white text-[8px] sm:text-[9.5px] font-bold px-1 py-0.5 sm:px-1.5 border-2 border-black rounded-xs shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] tracking-wide animate-pulse">
+          <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 border-2 border-black rounded-xs shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] tracking-wide animate-pulse">
             LTV
           </span>
         </div>
@@ -93,7 +93,7 @@ export default function Navbar({ onReplayIntro, onToggleCMS, showCMS }: NavbarPr
               onToggleCMS();
               setMobileMenuOpen(false);
             }}
-            className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-[10px] sm:text-xs uppercase border-2 border-black transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
+            className={`flex items-center space-x-1 sm:space-x-1.5 px-3 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm uppercase border-2 border-black transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] ${
               showCMS
                 ? 'bg-red-600 text-white hover:bg-red-500'
                 : 'bg-stone-900 text-yellow-400 hover:bg-yellow-500 hover:text-black'
