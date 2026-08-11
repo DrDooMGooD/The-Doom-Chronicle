@@ -164,7 +164,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="w-full flex flex-col items-center text-center px-4 mb-6"
             >
-              <div className="bg-red-600 text-white font-comic text-sm sm:text-base font-bold uppercase px-4 py-2 border-3 border-black rotate-[-1deg] shadow-comic flex items-center space-x-2">
+              <div className="bg-red-600 text-white font-comic text-base sm:text-lg font-bold uppercase px-5 py-2.5 border-3 border-black shadow-comic flex items-center space-x-2.5 tracking-wider">
                 <Skull className="w-5 h-5 fill-current" />
                 <span>LATVERIA SECURITY GATEWAY</span>
               </div>
@@ -263,13 +263,13 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                   className="flex-grow flex flex-col justify-between bg-stone-900 border-4 border-black p-4 sm:p-6 shadow-comic relative rounded-lg"
                 >
                   {/* Supreme Stamp */}
-                  <div className="absolute -top-3.5 right-4 bg-emerald-600 border-2 border-black text-white font-comic text-xs sm:text-sm font-bold uppercase px-3.5 py-1.5 rotate-[2deg] shadow-comic flex items-center space-x-2 z-10">
-                    <Brain className="w-4 h-4" />
+                  <div className="absolute -top-4 right-4 bg-emerald-600 border-3 border-black text-white font-comic text-sm sm:text-base font-bold uppercase px-4 py-1.5 shadow-comic flex items-center space-x-2 z-10 tracking-wider">
+                    <Brain className="w-4.5 h-4.5" />
                     <span>INTELLECT CONFIRMATION</span>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-comic text-base sm:text-lg uppercase text-emerald-400 tracking-wide mt-2 sm:mt-0">
+                    <h3 className="font-comic text-lg sm:text-xl uppercase text-emerald-400 tracking-wider mt-2 sm:mt-0">
                       SOVEREIGN TRIVIA CHALLENGE
                     </h3>
                     
@@ -283,15 +283,15 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                       ) : triviaStatus === 'correct' ? (
                         <div className="w-full bg-emerald-950/50 border border-emerald-500 text-emerald-400 text-xs px-3 py-2 flex items-center space-x-2 rounded animate-pulse">
                           <CheckCircle className="w-4 h-4 shrink-0" />
-                          <span className="font-bold uppercase text-[10px] sm:text-xs">CORRECT! ACCESS GRANTED TO THE DOMAIN. PORTAL OPENING...</span>
+                          <span className="font-bold uppercase text-xs sm:text-sm">CORRECT! ACCESS GRANTED TO THE DOMAIN. PORTAL OPENING...</span>
                         </div>
                       ) : triviaStatus === 'incorrect' ? (
                         <div className="w-full bg-rose-950/50 border border-rose-600 text-rose-400 text-xs px-3 py-2 flex items-center space-x-2 rounded">
                           <XCircle className="w-4 h-4 shrink-0" />
-                          <span className="font-bold uppercase text-[10px] sm:text-xs">INCORRECT! DOOM REJECTS THIS FOOLISH ANSWER. TRY AGAIN!</span>
+                          <span className="font-bold uppercase text-xs sm:text-sm">INCORRECT! DOOM REJECTS THIS FOOLISH ANSWER. TRY AGAIN!</span>
                         </div>
                       ) : (
-                        <p className="text-[11px] sm:text-xs text-stone-400 font-sans leading-relaxed">
+                        <p className="text-xs sm:text-sm text-stone-300 font-sans leading-relaxed">
                           To breach the gateway, you must demonstrate a standard level of respect and historical knowledge regarding the Sovereign.
                         </p>
                       )}
@@ -299,7 +299,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
 
                     {/* Trivia Question Box */}
                     <div className="bg-stone-950 border-2 border-black p-3.5 sm:p-4 rounded relative">
-                      <p className="font-comic text-stone-100 text-xs sm:text-sm md:text-base leading-snug">
+                      <p className="font-comic text-stone-100 text-sm sm:text-base md:text-lg leading-snug tracking-wide">
                         "{currentQuestion.question}"
                       </p>
                     </div>
@@ -308,7 +308,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                       {currentQuestion.options.map((option) => {
                         const isSelected = selectedOption === option;
-                        let btnClass = "bg-stone-950 border-2 border-stone-800 hover:border-emerald-600 text-stone-300 hover:text-white";
+                        let btnClass = "bg-stone-950 border-2 border-stone-800 hover:border-emerald-600 text-stone-200 hover:text-white";
                         
                         if (isSelected) {
                           if (triviaStatus === 'correct') {
@@ -323,7 +323,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                             key={option}
                             disabled={triviaStatus === 'correct' || isZooming}
                             onClick={() => handleSelectOption(option)}
-                            className={`p-2.5 rounded text-left text-[11px] sm:text-xs uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center justify-between min-h-[40px] ${btnClass}`}
+                            className={`p-3 rounded text-left text-xs sm:text-sm uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center justify-between min-h-[44px] ${btnClass}`}
                           >
                             <span>{option}</span>
                             {isSelected && triviaStatus === 'correct' && <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />}
