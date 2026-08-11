@@ -1,6 +1,22 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { CorpusItem } from '../types';
 
+/**
+ * Builds a relevant Unsplash image URL from a search query.
+ * Uses Unsplash's source endpoint which accepts keyword parameters.
+ */
+function buildUnsplashUrl(imageQuery: string, category: string): string {
+  const categoryFallbacks: Record<string, string> = {
+    game: 'video game controller neon',
+    comic: 'comic book superhero art',
+    movie: 'cinema film dramatic',
+  };
+  const query = imageQuery?.trim() || categoryFallbacks[category] || 'entertainment dark dramatic';
+  const encoded = encodeURIComponent(query);
+  // Unsplash source endpoint: returns a relevant image matching the search term
+  return `https://source.unsplash.com/featured/800x450/?${encoded}`;
+}
+
 export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
   const client = getSupabaseClient() as any;
   if (!client) throw new Error('Database client not initialized');
@@ -206,6 +222,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "doomVerdict": "Lord Doom's absolute summary verdict quote (e.g., 'WE DICTATE THIS IS ACCEPTABLE ENTERTAINMENT.')",
   "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query someone would type to find this review. Different from the main title — more keyword-intentional.",
   "seoDescription": "A compelling meta description (140-155 chars). Written as ad copy to earn the click from Google search results. Hint at the verdict and intrigue the reader.",
+  "imageQuery": "2-5 keywords for an Unsplash image search that visually represents this subject (e.g. 'dark souls gameplay', 'marvel comics spiderman', 'sci-fi film dramatic')",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -239,6 +256,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "doomVerdict": "Your short, decisive final verdict — a punchy quote summing up the work",
   "seoTitle": "An SEO-optimised title tag (50-60 chars). Target the specific search query someone would type to find this review — keyword-intentional, distinct from the article headline.",
   "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at your verdict, create intrigue, earn the click.",
+  "imageQuery": "2-5 keywords for an Unsplash image search that visually represents this subject (e.g. 'dark souls gameplay', 'marvel comics spiderman', 'sci-fi film dramatic')",
   "faqs": [
     {
       "question": "A genuine question a reader might have about the work",
@@ -265,6 +283,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               doomVerdict: { type: 'string' },
               seoTitle: { type: 'string' },
               seoDescription: { type: 'string' },
+              imageQuery: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -277,7 +296,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'imageQuery', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -319,7 +338,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     content: draft.content || '',
     publish_date: publishDate,
     read_time: readTime,
-    image_url: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=600&auto=format&fit=crop',
+    image_url: buildUnsplashUrl(draft.imageQuery, item.category),
     doom_rating: Number(draft.doomRating) || 4.5,
     doom_verdict: draft.doomVerdict || 'Doom approves.',
     seo_title: draft.seoTitle || item.title,
@@ -330,6 +349,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     geo_region: 'Latveria',
     faqs: draft.faqs || []
   };
+
 
   const { error: insertErr } = await client
     .from('articles')
@@ -395,6 +415,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "doomVerdict": "Lord Doom's absolute summary verdict quote",
   "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query — keyword-intentional, distinct from the article headline.",
   "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at the verdict and earn the click.",
+  "imageQuery": "2-5 keywords for an Unsplash image search that visually represents this subject (e.g. 'dark souls gameplay', 'marvel comics spiderman', 'sci-fi film dramatic')",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -440,6 +461,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "doomVerdict": "Your short, decisive final verdict",
   "seoTitle": "An SEO-optimised title tag (50-60 chars). Target the specific search query someone would type — keyword-intentional, distinct from the article headline.",
   "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at your verdict, create intrigue, earn the click.",
+  "imageQuery": "2-5 keywords for an Unsplash image search that visually represents this subject (e.g. 'dark souls gameplay', 'marvel comics spiderman', 'sci-fi film dramatic')",
   "faqs": [
     {
       "question": "A genuine reader question",
@@ -466,6 +488,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               doomVerdict: { type: 'string' },
               seoTitle: { type: 'string' },
               seoDescription: { type: 'string' },
+              imageQuery: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -478,7 +501,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'imageQuery', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -512,6 +535,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
       doom_verdict: draft.doomVerdict || '',
       seo_title: draft.seoTitle || article.title,
       seo_description: draft.seoDescription || draft.excerpt || '',
+      image_url: buildUnsplashUrl(draft.imageQuery, article.category),
       faqs: draft.faqs || [],
       read_time: readTime,
       status: 'pending_review',

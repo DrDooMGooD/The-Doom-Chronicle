@@ -22,6 +22,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "doomVerdict": "Lord Doom's absolute summary verdict quote (e.g., 'WE DICTATE THIS IS ACCEPTABLE ENTERTAINMENT.')",
   "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query someone would type to find this review. Different from the main title — more keyword-intentional.",
   "seoDescription": "A compelling meta description (140-155 chars). Written as ad copy to earn the click from Google search results. Hint at the verdict and intrigue the reader.",
+  "imageQuery": "2-5 keywords for an Unsplash image search that visually represents this subject (e.g. 'dark souls gameplay', 'marvel comics spiderman', 'sci-fi film dramatic')",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -55,6 +56,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               doomVerdict: { type: 'string' },
               seoTitle: { type: 'string' },
               seoDescription: { type: 'string' },
+              imageQuery: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -67,7 +69,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'imageQuery', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -99,9 +101,20 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   }
 }
 
+function buildUnsplashUrl(imageQuery: string, category: string): string {
+  const fallbacks: Record<string, string> = {
+    game: 'video game controller neon',
+    comic: 'comic book superhero art',
+    movie: 'cinema film dramatic',
+  };
+  const query = imageQuery?.trim() || fallbacks[category] || 'entertainment dark dramatic';
+  return `https://source.unsplash.com/featured/800x450/?${encodeURIComponent(query)}`;
+}
+
 async function main() {
   console.log('🤖 ARTHUR: THE ARTICLE AUTOMATOR RUNNING...');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
 
   const client = getSupabaseClient() as any;
   if (!client) {
@@ -164,6 +177,7 @@ async function main() {
         doom_verdict: draft.doomVerdict || 'Doom approves.',
         seo_title: draft.seoTitle || item.title,
         seo_description: draft.seoDescription || draft.excerpt || '',
+        image_url: buildUnsplashUrl(draft.imageQuery, item.category),
         slug,
         status: 'pending_review',
         author_name: 'Dr. Doom',
