@@ -20,6 +20,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "content": "The full review text. Contain exactly 2-3 paragraphs separated by double newlines.",
   "doomRating": 4.5,
   "doomVerdict": "Lord Doom's absolute summary verdict quote (e.g., 'WE DICTATE THIS IS ACCEPTABLE ENTERTAINMENT.')",
+  "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query someone would type to find this review. Different from the main title — more keyword-intentional.",
+  "seoDescription": "A compelling meta description (140-155 chars). Written as ad copy to earn the click from Google search results. Hint at the verdict and intrigue the reader.",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -51,6 +53,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               content: { type: 'string' },
               doomRating: { type: 'number' },
               doomVerdict: { type: 'string' },
+              seoTitle: { type: 'string' },
+              seoDescription: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -63,7 +67,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -158,6 +162,8 @@ async function main() {
         image_url: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=600&auto=format&fit=crop',
         doom_rating: Number(draft.doomRating) || 4.5,
         doom_verdict: draft.doomVerdict || 'Doom approves.',
+        seo_title: draft.seoTitle || item.title,
+        seo_description: draft.seoDescription || draft.excerpt || '',
         slug,
         status: 'pending_review',
         author_name: 'Dr. Doom',

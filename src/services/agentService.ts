@@ -204,6 +204,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "content": "The full review text. Contain exactly 2-3 paragraphs separated by double newlines.",
   "doomRating": 4.5,
   "doomVerdict": "Lord Doom's absolute summary verdict quote (e.g., 'WE DICTATE THIS IS ACCEPTABLE ENTERTAINMENT.')",
+  "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query someone would type to find this review. Different from the main title — more keyword-intentional.",
+  "seoDescription": "A compelling meta description (140-155 chars). Written as ad copy to earn the click from Google search results. Hint at the verdict and intrigue the reader.",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -235,6 +237,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "content": "The full review. Write 2-3 substantive paragraphs separated by double newlines. Include creator comparisons and go deep on craft.",
   "doomRating": 4.5,
   "doomVerdict": "Your short, decisive final verdict — a punchy quote summing up the work",
+  "seoTitle": "An SEO-optimised title tag (50-60 chars). Target the specific search query someone would type to find this review — keyword-intentional, distinct from the article headline.",
+  "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at your verdict, create intrigue, earn the click.",
   "faqs": [
     {
       "question": "A genuine question a reader might have about the work",
@@ -259,6 +263,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               content: { type: 'string' },
               doomRating: { type: 'number' },
               doomVerdict: { type: 'string' },
+              seoTitle: { type: 'string' },
+              seoDescription: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -271,7 +277,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -316,6 +322,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     image_url: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=600&auto=format&fit=crop',
     doom_rating: Number(draft.doomRating) || 4.5,
     doom_verdict: draft.doomVerdict || 'Doom approves.',
+    seo_title: draft.seoTitle || item.title,
+    seo_description: draft.seoDescription || draft.excerpt || '',
     slug,
     status: 'pending_review',
     author_name: doomOverride ? 'Dr. Doom' : 'Dom Pineda',
@@ -385,6 +393,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "content": "The full revised review text. Contain exactly 2-3 paragraphs separated by double newlines.",
   "doomRating": 4.5,
   "doomVerdict": "Lord Doom's absolute summary verdict quote",
+  "seoTitle": "An SEO-optimised title tag (50-60 chars). Target a specific search query — keyword-intentional, distinct from the article headline.",
+  "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at the verdict and earn the click.",
   "faqs": [
     {
       "question": "A mock reader question about the item",
@@ -428,6 +438,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   "content": "The full revised review. 2-3 substantive paragraphs separated by double newlines. Include creator comparisons and go deep on craft.",
   "doomRating": 4.5,
   "doomVerdict": "Your short, decisive final verdict",
+  "seoTitle": "An SEO-optimised title tag (50-60 chars). Target the specific search query someone would type — keyword-intentional, distinct from the article headline.",
+  "seoDescription": "A compelling meta description (140-155 chars). Written as search-result ad copy: hint at your verdict, create intrigue, earn the click.",
   "faqs": [
     {
       "question": "A genuine reader question",
@@ -452,6 +464,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
               content: { type: 'string' },
               doomRating: { type: 'number' },
               doomVerdict: { type: 'string' },
+              seoTitle: { type: 'string' },
+              seoDescription: { type: 'string' },
               faqs: {
                 type: 'array',
                 items: {
@@ -464,7 +478,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
                 }
               }
             },
-            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'faqs']
+            required: ['subtitle', 'excerpt', 'content', 'doomRating', 'doomVerdict', 'seoTitle', 'seoDescription', 'faqs']
           },
           maxOutputTokens: 8192,
           temperature: 0.85,
@@ -496,6 +510,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
       content: draft.content || '',
       doom_rating: Number(draft.doomRating) || article.doomRating,
       doom_verdict: draft.doomVerdict || '',
+      seo_title: draft.seoTitle || article.title,
+      seo_description: draft.seoDescription || draft.excerpt || '',
       faqs: draft.faqs || [],
       read_time: readTime,
       status: 'pending_review',
