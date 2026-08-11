@@ -43,22 +43,21 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
           },
         ],
         generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
+          response_json_schema: {
+            type: 'object',
             properties: {
-              subtitle: { type: 'STRING' },
-              excerpt: { type: 'STRING' },
-              content: { type: 'STRING' },
-              doomRating: { type: 'NUMBER' },
-              doomVerdict: { type: 'STRING' },
+              subtitle: { type: 'string' },
+              excerpt: { type: 'string' },
+              content: { type: 'string' },
+              doomRating: { type: 'number' },
+              doomVerdict: { type: 'string' },
               faqs: {
-                type: 'ARRAY',
+                type: 'array',
                 items: {
-                  type: 'OBJECT',
+                  type: 'object',
                   properties: {
-                    question: { type: 'STRING' },
-                    answer: { type: 'STRING' }
+                    question: { type: 'string' },
+                    answer: { type: 'string' }
                   },
                   required: ['question', 'answer']
                 }
