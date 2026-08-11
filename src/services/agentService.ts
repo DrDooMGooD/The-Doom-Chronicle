@@ -2,19 +2,20 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 import { CorpusItem } from '../types';
 
 /**
- * Builds a relevant Unsplash image URL from a search query.
- * Uses Unsplash's source endpoint which accepts keyword parameters.
+ * Builds a relevant article image URL from a search query.
+ * Uses loremflickr.com — free, no API key, keyword-driven, actively maintained.
+ * Falls back to category-appropriate keywords if imageQuery is empty.
  */
-function buildUnsplashUrl(imageQuery: string, category: string): string {
+function buildImageUrl(imageQuery: string, category: string): string {
   const categoryFallbacks: Record<string, string> = {
-    game: 'video game controller neon',
-    comic: 'comic book superhero art',
-    movie: 'cinema film dramatic',
+    game: 'video,game,controller,neon',
+    comic: 'comics,superhero,art,colorful',
+    movie: 'cinema,film,dramatic,screen',
   };
-  const query = imageQuery?.trim() || categoryFallbacks[category] || 'entertainment dark dramatic';
-  const encoded = encodeURIComponent(query);
-  // Unsplash source endpoint: returns a relevant image matching the search term
-  return `https://source.unsplash.com/featured/800x450/?${encoded}`;
+  const raw = imageQuery?.trim() || categoryFallbacks[category] || 'entertainment,dark,dramatic';
+  // loremflickr accepts comma-separated keywords and returns a relevant CC-licensed Flickr photo
+  const keywords = raw.replace(/\s+/g, ',').replace(/,+/g, ',');
+  return `https://loremflickr.com/800/450/${encodeURIComponent(keywords)}`;
 }
 
 export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
@@ -338,7 +339,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     content: draft.content || '',
     publish_date: publishDate,
     read_time: readTime,
-    image_url: buildUnsplashUrl(draft.imageQuery, item.category),
+    image_url: buildImageUrl(draft.imageQuery, item.category),
     doom_rating: Number(draft.doomRating) || 4.5,
     doom_verdict: draft.doomVerdict || 'Doom approves.',
     seo_title: draft.seoTitle || item.title,
@@ -535,7 +536,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
       doom_verdict: draft.doomVerdict || '',
       seo_title: draft.seoTitle || article.title,
       seo_description: draft.seoDescription || draft.excerpt || '',
-      image_url: buildUnsplashUrl(draft.imageQuery, article.category),
+      image_url: buildImageUrl(draft.imageQuery, article.category),
       faqs: draft.faqs || [],
       read_time: readTime,
       status: 'pending_review',

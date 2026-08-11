@@ -286,6 +286,10 @@ export default function ReviewVault() {
                         alt={article.title}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter contrast-125"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://loremflickr.com/800/450/${article.category},dark,dramatic`;
+                        }}
                       />
                       <div className="absolute bottom-2 left-2 bg-black border border-white px-2 py-1 flex items-center space-x-1 font-comic text-yellow-400 text-sm tracking-wide">
                         <Shield className="w-3.5 h-3.5 fill-current" />
@@ -620,6 +624,10 @@ export default function ReviewVault() {
                   alt={selectedArticle.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-top filter contrast-125"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      `https://loremflickr.com/800/450/${selectedArticle.category},dark,dramatic`;
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">

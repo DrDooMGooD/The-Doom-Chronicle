@@ -101,14 +101,15 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   }
 }
 
-function buildUnsplashUrl(imageQuery: string, category: string): string {
+function buildImageUrl(imageQuery: string, category: string): string {
   const fallbacks: Record<string, string> = {
-    game: 'video game controller neon',
-    comic: 'comic book superhero art',
-    movie: 'cinema film dramatic',
+    game: 'video,game,controller,neon',
+    comic: 'comics,superhero,art,colorful',
+    movie: 'cinema,film,dramatic,screen',
   };
-  const query = imageQuery?.trim() || fallbacks[category] || 'entertainment dark dramatic';
-  return `https://source.unsplash.com/featured/800x450/?${encodeURIComponent(query)}`;
+  const raw = imageQuery?.trim() || fallbacks[category] || 'entertainment,dark,dramatic';
+  const keywords = raw.replace(/\s+/g, ',').replace(/,+/g, ',');
+  return `https://loremflickr.com/800/450/${encodeURIComponent(keywords)}`;
 }
 
 async function main() {
@@ -177,7 +178,7 @@ async function main() {
         doom_verdict: draft.doomVerdict || 'Doom approves.',
         seo_title: draft.seoTitle || item.title,
         seo_description: draft.seoDescription || draft.excerpt || '',
-        image_url: buildUnsplashUrl(draft.imageQuery, item.category),
+        image_url: buildImageUrl(draft.imageQuery, item.category),
         slug,
         status: 'pending_review',
         author_name: 'Dr. Doom',

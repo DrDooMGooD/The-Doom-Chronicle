@@ -1627,6 +1627,10 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                   alt={previewArticle.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-top filter contrast-125"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      `https://loremflickr.com/800/450/${previewArticle.category},dark,dramatic`;
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
