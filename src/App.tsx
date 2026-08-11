@@ -9,6 +9,7 @@ import VaultPage from './pages/VaultPage';
 import CounselPage from './pages/CounselPage';
 import GuestbookPage from './pages/GuestbookPage';
 import CMSPage from './pages/CMSPage';
+import TributePage from './pages/TributePage';
 import { Shield, ArrowUp, Skull, Eye } from 'lucide-react';
 
 // ─── Shared Footer ────────────────────────────────────────────────────────────
@@ -78,6 +79,14 @@ function SiteFooter({ onReplayIntro }: { onReplayIntro: () => void }) {
                   className="hover:text-emerald-400 transition-colors cursor-pointer"
                 >
                   🖊️ Sovereign Registry
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('/tribute')}
+                  className="hover:text-yellow-400 transition-colors cursor-pointer text-yellow-400 font-bold"
+                >
+                  🎁 War Chest & Wishlist
                 </button>
               </li>
               <li className="border-t border-stone-800 pt-2 mt-2">
@@ -200,6 +209,8 @@ export default function App() {
         <Route path="/vault" element={<VaultPage />} />
         <Route path="/counsel" element={<CounselPage />} />
         <Route path="/guestbook" element={<GuestbookPage />} />
+        <Route path="/tribute" element={<TributePage />} />
+        <Route path="/wishlist" element={<TributePage />} />
         <Route path="/cms" element={<CMSPage />} />
         {/* Fallback: redirect unknown routes home */}
         <Route path="*" element={<HomePage onReplayIntro={handleReplayIntro} />} />

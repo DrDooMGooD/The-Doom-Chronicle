@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Skull, BookOpen, PenTool, MessageSquare, Eye, Menu, X } from 'lucide-react';
+import { Shield, Skull, BookOpen, PenTool, MessageSquare, Eye, Menu, X, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface NavbarProps {
@@ -14,6 +14,7 @@ const navItems = [
   { route: '/vault',     label: 'Sovereign Reviews',  icon: <BookOpen   className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" /> },
   { route: '/counsel',   label: "Doom's Counsel",     icon: <MessageSquare className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> },
   { route: '/guestbook', label: 'Sovereign Registry', icon: <PenTool    className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" /> },
+  { route: '/tribute',   label: 'Tribute & Wishlist', icon: <Gift       className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-yellow-400" /> },
 ];
 
 export default function Navbar({ onReplayIntro, onToggleCMS, showCMS }: NavbarProps) {

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { BookOpen, MessageSquare, PenTool, ArrowRight } from 'lucide-react';
+import { BookOpen, MessageSquare, PenTool, ArrowRight, Gift } from 'lucide-react';
 
 const portals = [
   {
@@ -51,6 +51,22 @@ const portals = [
     skewClass: '',
     number: '03',
   },
+  {
+    id: 'tribute',
+    route: '/tribute',
+    icon: <Gift className="w-8 h-8" />,
+    label: 'WAR CHEST & WISHLIST',
+    tagline: 'DIRECT TRIBUTES. TECH UPGRADES.',
+    description:
+      'Support the site and equip the studio with state-of-the-art capture cards, reference comics, and audio gear.',
+    accent: 'bg-amber-500',
+    border: 'border-amber-600',
+    hoverShadow: 'hover:shadow-[8px_8px_0px_0px_rgba(217,119,6,1)]',
+    badge: '🎁 WAR CHEST',
+    badgeBg: 'bg-amber-600',
+    skewClass: '',
+    number: '04',
+  },
 ];
 
 export default function HomePortals() {
@@ -73,8 +89,8 @@ export default function HomePortals() {
           <div className="mt-4 h-1 w-32 bg-rose-600 mx-auto border border-black" />
         </div>
 
-        {/* Three portal panels */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        {/* Four portal panels */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           {portals.map((portal, i) => (
             <motion.div
               key={portal.id}

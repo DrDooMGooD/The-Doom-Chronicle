@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw, Star
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw, Star, Gift, DollarSign, Heart, ExternalLink
 } from 'lucide-react';
 import { Article, GuestbookEntry, CorpusItem } from '../types';
+import { defaultTributeConfig, defaultWishlistItems, TributeConfig, WishlistItem } from '../data/wishlistData';
 import { 
   fetchAdminArticles, updateArticle, deleteArticle, createArticle,
   fetchRegistryEntries, respondToRegistryEntry, deleteRegistryEntry 
@@ -29,7 +30,33 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewArticle, setPreviewArticle] = useState<Article | null>(null);
-  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry' | 'corpus'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'published' | 'draft' | 'registry' | 'corpus' | 'tribute'>('pending');
+
+  // Tribute & Wishlist states
+  const [cmsTributeConfig, setCmsTributeConfig] = useState<TributeConfig>(() => {
+    try {
+      const saved = localStorage.getItem('doom_tribute_config');
+      return saved ? JSON.parse(saved) : defaultTributeConfig;
+    } catch {
+      return defaultTributeConfig;
+    }
+  });
+
+  const [cmsWishlistItems, setCmsWishlistItems] = useState<WishlistItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('doom_wishlist_items');
+      return saved ? JSON.parse(saved) : defaultWishlistItems;
+    } catch {
+      return defaultWishlistItems;
+    }
+  });
+
+  const [newWishItemTitle, setNewWishItemTitle] = useState('');
+  const [newWishItemCategory, setNewWishItemCategory] = useState<'hardware' | 'comic' | 'software' | 'studio'>('hardware');
+  const [newWishItemPrice, setNewWishItemPrice] = useState('');
+  const [newWishItemImpact, setNewWishItemImpact] = useState('');
+  const [newWishItemBuyUrl, setNewWishItemBuyUrl] = useState('');
+  const [newWishItemPriority, setNewWishItemPriority] = useState<'high' | 'medium' | 'fulfilled'>('high');
 
   // Arthur Rewrite state
   const [rewriteTarget, setRewriteTarget] = useState<Article | null>(null);
@@ -583,7 +610,8 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
             { id: 'published', label: 'Published ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
             { id: 'draft', label: 'Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
             { id: 'registry', label: 'Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' },
-            { id: 'corpus', label: '🎯 Strategy Corpus', count: corpusEntries.length, color: 'border-rose-500 text-rose-450' }
+            { id: 'corpus', label: '🎯 Strategy Corpus', count: corpusEntries.length, color: 'border-rose-500 text-rose-450' },
+            { id: 'tribute', label: '🎁 Tribute Protocol', count: cmsWishlistItems.length, color: 'border-amber-500 text-amber-400' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -1110,6 +1138,247 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                       })}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* 🎁 Tribute & Wishlist Protocol Management */}
+              {activeTab === 'tribute' && (
+                <div className="space-y-8">
+                  {/* Payment credentials manager */}
+                  <div className="bg-stone-900 border-3 border-black p-6 space-y-6 shadow-comic">
+                    <div className="flex items-center space-x-2 border-b-2 border-black pb-3">
+                      <Gift className="w-5 h-5 text-amber-400" />
+                      <h3 className="font-comic text-xl text-white uppercase tracking-wider">
+                        SOVEREIGN PAYMENT CREDENTIALS & HANDLES
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">VENMO HANDLE:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.venmoHandle}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, venmoHandle: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">PAYPAL ME URL:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.paypalUrl}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, paypalUrl: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">CASH APP TAG:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.cashAppHandle}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, cashAppHandle: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">BUY ME A COFFEE URL:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.buyMeACoffeeUrl}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, buyMeACoffeeUrl: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">BITCOIN (BTC) ADDRESS:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.btcAddress}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, btcAddress: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">ETHEREUM (ETH) ADDRESS:</label>
+                        <input
+                          type="text"
+                          value={cmsTributeConfig.ethAddress}
+                          onChange={(e) => setCmsTributeConfig({ ...cmsTributeConfig, ethAddress: e.target.value })}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5 focus:border-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('doom_tribute_config', JSON.stringify(cmsTributeConfig));
+                          alert('⚡ Sovereign Payment Protocol Credentials Updated!');
+                        } catch (err: any) {
+                          alert(`Save failed: ${err.message}`);
+                        }
+                      }}
+                      className="bg-amber-500 hover:bg-amber-400 text-black font-comic text-sm uppercase px-6 py-2.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer font-bold"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Payment Credentials</span>
+                    </button>
+                  </div>
+
+                  {/* Add New Wishlist Item Form */}
+                  <div className="bg-stone-900 border-3 border-black p-6 space-y-4 shadow-comic">
+                    <div className="flex items-center space-x-2 border-b-2 border-black pb-3">
+                      <Plus className="w-5 h-5 text-emerald-400" />
+                      <h3 className="font-comic text-xl text-white uppercase tracking-wider">
+                        ADD NEW WISHLIST EQUIPMENT / HARDWARE
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">ITEM TITLE:</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Sony WH-1000XM5 Studio Headphones"
+                          value={newWishItemTitle}
+                          onChange={(e) => setNewWishItemTitle(e.target.value)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">ESTIMATED COST / PRICE:</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. $299.00"
+                          value={newWishItemPrice}
+                          onChange={(e) => setNewWishItemPrice(e.target.value)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">CATEGORY:</label>
+                        <select
+                          value={newWishItemCategory}
+                          onChange={(e) => setNewWishItemCategory(e.target.value as any)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        >
+                          <option value="hardware">Hardware & Tech</option>
+                          <option value="comic">Comic & Lore Material</option>
+                          <option value="software">Software & Hosting</option>
+                          <option value="studio">Studio Setup</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-stone-400 font-bold mb-1">PRIORITY STATUS:</label>
+                        <select
+                          value={newWishItemPriority}
+                          onChange={(e) => setNewWishItemPriority(e.target.value as any)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        >
+                          <option value="high">🔥 High Priority</option>
+                          <option value="medium">Medium Priority</option>
+                          <option value="fulfilled">✅ Fulfilled</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-stone-400 font-bold mb-1">RETAIL / DIRECT BUY LINK:</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. https://www.amazon.com/dp/..."
+                          value={newWishItemBuyUrl}
+                          onChange={(e) => setNewWishItemBuyUrl(e.target.value)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-stone-400 font-bold mb-1">WHY THIS MATTERS (IMPACT ON REVIEWS/SITE):</label>
+                        <textarea
+                          rows={2}
+                          placeholder="Explain how this item elevates review depth, quality, or site speed..."
+                          value={newWishItemImpact}
+                          onChange={(e) => setNewWishItemImpact(e.target.value)}
+                          className="w-full bg-stone-950 text-white border border-stone-800 p-2.5"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newWishItemTitle.trim()) {
+                          alert('Item title is required.');
+                          return;
+                        }
+                        const item: WishlistItem = {
+                          id: `wish-${Date.now()}`,
+                          title: newWishItemTitle.trim(),
+                          category: newWishItemCategory,
+                          price: newWishItemPrice.trim() || '$0.00',
+                          impact: newWishItemImpact.trim() || 'Improves overall production quality.',
+                          buyUrl: newWishItemBuyUrl.trim() || '#',
+                          priority: newWishItemPriority,
+                          imageUrl: `https://loremflickr.com/600/400/${newWishItemCategory},tech`
+                        };
+                        const updated = [item, ...cmsWishlistItems];
+                        setCmsWishlistItems(updated);
+                        localStorage.setItem('doom_wishlist_items', JSON.stringify(updated));
+                        setNewWishItemTitle('');
+                        setNewWishItemPrice('');
+                        setNewWishItemImpact('');
+                        setNewWishItemBuyUrl('');
+                        alert('🎁 Wishlist Item Added to Public Ledger!');
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-comic text-sm uppercase px-6 py-2.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer font-bold"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Item to Wishlist</span>
+                    </button>
+                  </div>
+
+                  {/* Active Wishlist Items List */}
+                  <div className="bg-stone-900 border-3 border-black p-6 space-y-4 shadow-comic">
+                    <h3 className="font-comic text-xl text-white uppercase border-b-2 border-black pb-3">
+                      CURRENT WISHLIST ITEMS ({cmsWishlistItems.length})
+                    </h3>
+
+                    <div className="space-y-3">
+                      {cmsWishlistItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-stone-950 border border-stone-800 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-xs"
+                        >
+                          <div className="space-y-1 max-w-xl">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-bold text-white uppercase text-sm">{item.title}</span>
+                              <span className="bg-amber-950 border border-amber-600 text-amber-300 text-[10px] px-1.5 py-0.5">
+                                {item.price}
+                              </span>
+                              <span className="bg-stone-850 text-stone-400 text-[10px] px-1.5 py-0.5 uppercase">
+                                {item.category}
+                              </span>
+                            </div>
+                            <p className="text-stone-400 text-[11px] leading-relaxed">{item.impact}</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!window.confirm(`Delete "${item.title}" from Wishlist?`)) return;
+                              const filtered = cmsWishlistItems.filter((i) => i.id !== item.id);
+                              setCmsWishlistItems(filtered);
+                              localStorage.setItem('doom_wishlist_items', JSON.stringify(filtered));
+                            }}
+                            className="bg-red-950 hover:bg-red-900 text-red-300 border border-red-700 px-3 py-1.5 text-[10px] font-bold uppercase flex items-center space-x-1 cursor-pointer shrink-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </>
