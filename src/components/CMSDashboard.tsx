@@ -606,10 +606,10 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
         {/* Tab Selection */}
         <div className="flex border-b-4 border-black mb-6 overflow-x-auto whitespace-nowrap">
           {[
-            { id: 'pending', label: 'Pending Review', count: pendingArticles.length, color: 'border-yellow-500 text-yellow-400' },
-            { id: 'published', label: 'Published ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
-            { id: 'draft', label: 'Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
-            { id: 'registry', label: 'Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' },
+            { id: 'pending', label: '⚠️ Pending Review', count: pendingArticles.length, color: 'border-yellow-500 text-yellow-400' },
+            { id: 'published', label: '📜 Published Ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
+            { id: 'draft', label: '✏️ Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
+            { id: 'registry', label: '📋 Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' },
             { id: 'corpus', label: '🎯 Strategy Corpus', count: corpusEntries.length, color: 'border-rose-500 text-rose-450' },
             { id: 'tribute', label: '🎁 Tribute Protocol', count: cmsWishlistItems.length, color: 'border-amber-500 text-amber-400' }
           ].map(tab => (
