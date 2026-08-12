@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shield, Lock, Unlock, FileText, CheckCircle, Trash2, 
   Edit3, Plus, Trash, BookOpen, Terminal, Settings, 
-  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw, Star, Gift, DollarSign, Heart, ExternalLink
+  AlertTriangle, Globe, Key, X, Check, Save, Eye, EyeOff, Mail, RefreshCw, Star, Gift, DollarSign, Heart, ExternalLink, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Article, GuestbookEntry, CorpusItem } from '../types';
 import { defaultTributeConfig, defaultWishlistItems, TributeConfig, WishlistItem } from '../data/wishlistData';
@@ -108,6 +108,14 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   // Sovereign keys settings state
   const [showSettings, setShowSettings] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini-api-key') || '');
+
+  // Tab strip scroll ref
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const scrollTabs = (dir: 'left' | 'right') => {
+    if (tabsScrollRef.current) {
+      tabsScrollRef.current.scrollBy({ left: dir === 'left' ? -220 : 220, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     if (passcode) {
@@ -603,28 +611,55 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
           </div>
         )}
 
-        {/* Tab Selection */}
-        <div className="flex border-b-4 border-black mb-6 overflow-x-auto whitespace-nowrap">
-          {[
-            { id: 'pending', label: '⚠️ Pending Review', count: pendingArticles.length, color: 'border-yellow-500 text-yellow-400' },
-            { id: 'published', label: '📜 Published Ledger', count: publishedArticles.length, color: 'border-emerald-500 text-emerald-400' },
-            { id: 'draft', label: '✏️ Drafts', count: draftArticles.length, color: 'border-stone-500 text-stone-400' },
-            { id: 'registry', label: '📋 Registry Ledger', count: registryEntries.length, color: 'border-indigo-500 text-indigo-400' },
-            { id: 'corpus', label: '🎯 Strategy Corpus', count: corpusEntries.length, color: 'border-rose-500 text-rose-450' },
-            { id: 'tribute', label: '🎁 Tribute Protocol', count: cmsWishlistItems.length, color: 'border-amber-500 text-amber-400' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-3 font-bold text-xs sm:text-sm uppercase tracking-wide border-t-4 border-x-4 border-black -mb-1 mr-1.5 cursor-pointer transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-stone-900 border-b-stone-900 text-white font-bold'
-                  : 'bg-stone-950 border-b-black text-stone-500 hover:text-stone-300'
-              }`}
-            >
-              {tab.label} <span className="bg-black/50 border border-stone-850 px-1.5 py-0.5 rounded-sm ml-1 text-stone-400 font-mono text-xs">{tab.count}</span>
-            </button>
-          ))}
+        {/* Tab Selection with left/right arrow navigation */}
+        <div className="flex items-end border-b-4 border-black mb-6">
+
+          {/* Left arrow */}
+          <button
+            onClick={() => scrollTabs('left')}
+            className="shrink-0 self-stretch flex items-center justify-center px-2 bg-stone-950 border-t-4 border-l-4 border-r-2 border-black hover:bg-stone-800 text-stone-400 hover:text-white transition-colors cursor-pointer -mb-1 z-10"
+            aria-label="Scroll tabs left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Scrollable tab strip — scrollbar hidden */}
+          <div
+            ref={tabsScrollRef}
+            className="flex flex-1 overflow-x-auto whitespace-nowrap"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {([
+              { id: 'pending',   label: '⚠️ Pending Review',   count: pendingArticles.length },
+              { id: 'published', label: '📜 Published Ledger',  count: publishedArticles.length },
+              { id: 'draft',     label: '✏️ Drafts',            count: draftArticles.length },
+              { id: 'registry',  label: '📋 Registry Ledger',   count: registryEntries.length },
+              { id: 'corpus',    label: '🎯 Strategy Corpus',   count: corpusEntries.length },
+              { id: 'tribute',   label: '🎁 Tribute Protocol',  count: cmsWishlistItems.length },
+            ] as const).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-3 font-bold text-xs sm:text-sm uppercase tracking-wide border-t-4 border-x-4 border-black -mb-1 mr-1 shrink-0 cursor-pointer transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-stone-900 border-b-stone-900 text-white'
+                    : 'bg-stone-950 border-b-black text-stone-500 hover:text-stone-300'
+                }`}
+              >
+                {tab.label} <span className="bg-black/50 border border-stone-800 px-1.5 py-0.5 ml-1 text-stone-400 font-mono text-xs">{tab.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Right arrow */}
+          <button
+            onClick={() => scrollTabs('right')}
+            className="shrink-0 self-stretch flex items-center justify-center px-2 bg-stone-950 border-t-4 border-r-4 border-l-2 border-black hover:bg-stone-800 text-stone-400 hover:text-white transition-colors cursor-pointer -mb-1 z-10"
+            aria-label="Scroll tabs right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
         </div>
 
         {/* Articles Table Grid */}
