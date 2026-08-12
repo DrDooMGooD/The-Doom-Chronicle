@@ -65,12 +65,15 @@ CREATE POLICY "Public: insert registry entry"
 
 ALTER TABLE content_corpus ENABLE ROW LEVEL SECURITY;
 
--- Deny ALL access via the anon key (public internet).
--- This table is exclusively managed by Arthur (the AI
--- agent) and the CMS dashboard, both of which must use
--- the SERVICE ROLE key via a secure backend/edge function.
+-- The CMS dashboard reads planning items via the anon key,
+-- so SELECT is allowed. INSERT/UPDATE/DELETE remain blocked
+-- for the anon key — only the service role can write.
+CREATE POLICY "Public: read content corpus"
+  ON content_corpus
+  FOR SELECT
+  USING (true);
 
--- No policies = anon role gets nothing.
+-- No INSERT / UPDATE / DELETE via anon key.
 -- The service role bypasses RLS automatically.
 
 
