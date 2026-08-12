@@ -30,11 +30,8 @@ export function getSupabaseConfig() {
     } catch {}
   }
 
-  // Hardcoded fallback credentials to support instant connection in Google AI Studio previews
-  if (!url || !anonKey) {
-    url = 'https://bazvdidiqtuzkqkqmtha.supabase.co';
-    anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhenZkaWRpcXR1emtxa3FtdGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjQyODksImV4cCI6MjA5ODAwMDI4OX0.93ZTl6VDBkxClTcnl8xRcsaWq2ZISr5IhqaSPdroc8c';
-  }
+  // No hardcoded fallback — credentials must be set via environment variables.
+  // Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file (never commit them).
 
   return {
     url: url.trim(),

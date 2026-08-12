@@ -4,9 +4,9 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 const getExpectedPasscode = () => {
   try {
     const env = (import.meta as any).env || {};
-    return env.VITE_ADMIN_PASSPHRASE || 'Hackboy4711!';
+    return env.VITE_ADMIN_PASSPHRASE || '';
   } catch {
-    return 'Hackboy4711!';
+    return '';
   }
 };
 
