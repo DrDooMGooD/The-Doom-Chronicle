@@ -195,8 +195,11 @@ export async function deleteArticle(id: string): Promise<void> {
     if (err.message === 'API_SERVER_OFFLINE') {
       const client = getSupabaseClient() as any;
       if (!client) throw new Error('Database client not initialized');
-      const { error } = await client.from('articles').delete().eq('id', id);
+      const { data, error } = await client.from('articles').delete().eq('id', id).select('*');
       if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
+        throw new Error('Supabase RLS policy is blocking DELETE on articles table. Please run the RLS DELETE policy in Supabase SQL Editor.');
+      }
       return;
     }
     throw err;
@@ -318,8 +321,11 @@ export async function deleteRegistryEntry(id: string): Promise<void> {
     if (err.message === 'API_SERVER_OFFLINE') {
       const client = getSupabaseClient() as any;
       if (!client) throw new Error('Database client not initialized');
-      const { error } = await client.from('registry').delete().eq('id', id);
+      const { data, error } = await client.from('registry').delete().eq('id', id).select('*');
       if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
+        throw new Error('Supabase RLS policy is blocking DELETE on registry table. Please run the RLS DELETE policy in Supabase SQL Editor.');
+      }
       return;
     }
     throw err;
