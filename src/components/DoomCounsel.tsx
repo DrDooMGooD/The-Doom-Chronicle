@@ -72,20 +72,20 @@ export default function DoomCounsel() {
 
   return (
     <section id="counsel" className="relative py-20 bg-stone-950 border-b-8 border-black overflow-hidden min-h-screen flex flex-col justify-center">
-      {/* Dynamic Video Background Layer */}
+      {/* Fixed Dynamic Video Background Layer */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover object-center filter brightness-95 contrast-105 pointer-events-none z-0"
+        className="fixed inset-0 w-full h-full object-cover object-center filter brightness-95 contrast-105 pointer-events-none z-0"
       >
         <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
       </video>
 
-      {/* Light Vignette Overlay for Crisp Visibility */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50 pointer-events-none z-0" />
-      <div className="absolute inset-0 halftone-bg opacity-10 pointer-events-none z-0" />
+      {/* Fixed Light Vignette Overlay */}
+      <div className="fixed inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50 pointer-events-none z-0" />
+      <div className="fixed inset-0 halftone-bg opacity-10 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
