@@ -51,10 +51,19 @@ async function request<T>(
     throw new Error(message);
   }
 
-  // 204 No Content or empty body
+  // If response is HTML (e.g. Netlify static SPA fallback index.html), throw API_SERVER_OFFLINE
   const text = await res.text();
   if (!text) return {} as T;
-  return JSON.parse(text) as T;
+
+  if (text.trim().startsWith('<') || (res.headers.get('content-type') || '').includes('text/html')) {
+    throw new Error('API_SERVER_OFFLINE');
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error('API_SERVER_OFFLINE');
+  }
 }
 
 // ─── Admin helpers ────────────────────────────────────────────────────────────

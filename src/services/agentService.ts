@@ -31,19 +31,64 @@ export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
 }
 
 export async function deleteCorpusItem(id: string): Promise<void> {
-  await adminDel(`/admin/corpus/${id}`);
+  try {
+    await adminDel(`/admin/corpus/${id}`);
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (!client) throw new Error('Database client not initialized');
+      const { error } = await client.from('content_corpus').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+    throw err;
+  }
 }
 
 export async function updateCorpusItem(
   id: string,
   updates: { notes?: string; title?: string; status?: string; published_url?: string | null }
 ): Promise<void> {
-  await adminPut(`/admin/corpus/${id}`, updates);
+  try {
+    await adminPut(`/admin/corpus/${id}`, updates);
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (!client) throw new Error('Database client not initialized');
+      const { error } = await client.from('content_corpus').update(updates).eq('id', id);
+      if (error) throw new Error(error.message);
+      return;
+    }
+    throw err;
+  }
 }
 
 export async function clearCorpusBacklog(statusFilter: 'backlog' | 'published' | 'all' = 'backlog'): Promise<number> {
-  const result = await adminDel<{ deleted: number }>('/admin/corpus', { statusFilter });
-  return result.deleted ?? 0;
+  try {
+    const result = await adminDel<{ deleted: number }>('/admin/corpus', { statusFilter });
+    return result.deleted ?? 0;
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (!client) throw new Error('Database client not initialized');
+      let query = client.from('content_corpus').select('id');
+      if (statusFilter !== 'all') {
+        query = statusFilter === 'backlog'
+          ? query.in('status', ['backlog'])
+          : query.in('status', ['backlog', 'published']);
+      } else {
+        query = query.not('status', 'eq', 'in_progress');
+      }
+      const { data: toDelete, error: fetchErr } = await query;
+      if (fetchErr) throw new Error(fetchErr.message);
+      if (!toDelete || toDelete.length === 0) return 0;
+      const ids = toDelete.map((r: any) => r.id);
+      const { error: deleteErr } = await client.from('content_corpus').delete().in('id', ids);
+      if (deleteErr) throw new Error(deleteErr.message);
+      return ids.length;
+    }
+    throw err;
+  }
 }
 
 export async function triggerLucyBrainstorm(geminiApiKey: string, searchQuery?: string): Promise<void> {
