@@ -103,7 +103,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
     setTimeout(() => {
       setTransitionState('video');
       
-      // Step 3: Zoom in after video has played for 2.6 seconds
+      // Step 3: Zoom in after video has played for 4.5 seconds
       setTimeout(() => {
         setTransitionState('zoom');
         
@@ -111,7 +111,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
         setTimeout(() => {
           onComplete();
         }, 1500);
-      }, 2600);
+      }, 4500);
     }, 800);
   };
 
