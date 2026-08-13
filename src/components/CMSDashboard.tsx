@@ -125,9 +125,14 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
 
   const handleAuth = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (!passcode.trim()) {
+      setAuthError('Passphrase required');
+      return;
+    }
     setIsLoading(true);
     setAuthError(null);
     try {
+      localStorage.setItem('castle_passcode', passcode.trim());
       const data = await fetchAdminArticles();
       setArticles(data);
       const registryData = await fetchRegistryEntries();
@@ -143,9 +148,9 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       setReplyTexts(initialReplies);
 
       setIsAuthorized(true);
-      localStorage.setItem('castle_passcode', passcode);
     } catch (err: any) {
       console.error(err);
+      localStorage.removeItem('castle_passcode');
       setAuthError(err.message || 'ACCESS DENIED: Authentication verification failed');
       setIsAuthorized(false);
     } finally {
