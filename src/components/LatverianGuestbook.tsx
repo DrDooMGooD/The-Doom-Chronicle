@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PenTool, Shield, User, Globe, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { GuestbookEntry } from '../types';
@@ -67,6 +67,27 @@ export default function LatverianGuestbook() {
   const [notification, setNotification] = useState<{ type: 'success' | 'warn' | null, message: string }>({ type: null, message: '' });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Turnstile CAPTCHA
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const [cfTurnstileToken, setCfTurnstileToken] = useState<string>('');
+  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
+  useEffect(() => {
+    if (!turnstileRef.current) return;
+    const win = window as any;
+    if (!win.turnstile) return;
+    const id = win.turnstile.render(turnstileRef.current, {
+      sitekey: turnstileSiteKey,
+      action: 'guestbook',
+      callback: (token: string) => setCfTurnstileToken(token),
+      'expired-callback': () => setCfTurnstileToken(''),
+      'error-callback': () => setCfTurnstileToken(''),
+      theme: 'dark',
+    });
+    return () => { try { win.turnstile.remove(id); } catch { /* ignore */ } };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Initialize and load guestbook
   const loadEntries = () => {
     fetchRegistryEntries()
@@ -118,24 +139,28 @@ export default function LatverianGuestbook() {
 
     setIsLoading(true);
     try {
-      const newEntry: Partial<GuestbookEntry> = {
+      const newEntry: Partial<GuestbookEntry> & { cfTurnstileToken?: string } = {
         name: finalName,
         email: email || undefined,
         newsletter,
         allegiance,
         country,
         tribute,
-        acceptedByDoom: true
+        acceptedByDoom: true,
+        cfTurnstileToken,
       };
 
       await submitRegistryEntry(newEntry);
-      
-      // Reset inputs
+
+      // Reset inputs and CAPTCHA
       setName('');
       setEmail('');
       setNewsletter(false);
       setTribute('');
-      
+      setCfTurnstileToken('');
+      const win = window as any;
+      if (win.turnstile) win.turnstile.reset();
+
       setNotification({ type: 'success', message: 'Tribute received by the Castle Scribes! Your loyalty has been registered.' });
       setTimeout(() => setNotification({ type: null, message: '' }), 4000);
       loadEntries();
@@ -260,14 +285,18 @@ export default function LatverianGuestbook() {
                 </label>
               </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-comic text-xl uppercase py-3 border-4 border-black shadow-comic active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer"
-                >
-                  STAMP SOVEREIGN COUPLING →
-                </button>
-              </div>
+                {/* Turnstile CAPTCHA widget */}
+                <div ref={turnstileRef} className="my-2" />
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-emerald-800 hover:bg-emerald-700 disabled:bg-stone-700 text-white font-comic text-xl uppercase py-3 border-4 border-black shadow-comic active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'TRANSMITTING...' : 'STAMP SOVEREIGN COUPLING →'}
+                  </button>
+                </div>
 
             </form>
 

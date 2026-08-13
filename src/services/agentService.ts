@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
+import { adminPost, adminPut, adminDel } from '../lib/serverApi';
 import { CorpusItem } from '../types';
 
 /**
@@ -30,54 +31,19 @@ export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
 }
 
 export async function deleteCorpusItem(id: string): Promise<void> {
-  const client = getSupabaseClient() as any;
-  if (!client) throw new Error('Database client not initialized');
-  const { error } = await client
-    .from('content_corpus')
-    .delete()
-    .eq('id', id);
-  if (error) throw new Error(error.message);
+  await adminDel(`/admin/corpus/${id}`);
 }
 
 export async function updateCorpusItem(
   id: string,
   updates: { notes?: string; title?: string; status?: string; published_url?: string | null }
 ): Promise<void> {
-  const client = getSupabaseClient() as any;
-  if (!client) throw new Error('Database client not initialized');
-  const { error } = await client
-    .from('content_corpus')
-    .update(updates)
-    .eq('id', id);
-  if (error) throw new Error(error.message);
+  await adminPut(`/admin/corpus/${id}`, updates);
 }
 
 export async function clearCorpusBacklog(statusFilter: 'backlog' | 'published' | 'all' = 'backlog'): Promise<number> {
-  const client = getSupabaseClient() as any;
-  if (!client) throw new Error('Database client not initialized');
-
-  // First fetch the matching IDs so we know how many we deleted
-  let query = client.from('content_corpus').select('id');
-  if (statusFilter !== 'all') {
-    query = statusFilter === 'backlog'
-      ? query.in('status', ['backlog'])
-      : query.in('status', ['backlog', 'published']);
-  } else {
-    // 'all' excludes in_progress items to avoid clearing active jobs
-    query = query.not('status', 'eq', 'in_progress');
-  }
-
-  const { data: toDelete, error: fetchErr } = await query;
-  if (fetchErr) throw new Error(fetchErr.message);
-  if (!toDelete || toDelete.length === 0) return 0;
-
-  const ids = toDelete.map((r: any) => r.id);
-  const { error: deleteErr } = await client
-    .from('content_corpus')
-    .delete()
-    .in('id', ids);
-  if (deleteErr) throw new Error(deleteErr.message);
-  return ids.length;
+  const result = await adminDel<{ deleted: number }>('/admin/corpus', { statusFilter });
+  return result.deleted ?? 0;
 }
 
 export async function triggerLucyBrainstorm(geminiApiKey: string, searchQuery?: string): Promise<void> {
@@ -171,34 +137,29 @@ You MUST respond with a raw JSON array matching this schema. Do not add any back
   cleanText = extractJsonArray(cleanText);
 
   const trends = JSON.parse(cleanText);
-  for (const item of trends) {
-    const id = `corp-trend-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const { error } = await client
-      .from('content_corpus')
-      .insert([
-        {
-          id,
-          title: item.title,
-          category: item.category,
-          notes: item.notes,
-          status: 'backlog'
-        }
-      ]);
-    if (error) console.error('Failed to insert item:', error.message);
+  const corpusItems = trends.map((item: { title: string; category: string; notes: string }) => ({
+    id: `corp-trend-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    title: item.title,
+    category: item.category,
+    notes: item.notes,
+    status: 'backlog',
+  }));
+
+  // Insert each item via the server API (service-role key, bypasses RLS)
+  for (const corpusItem of corpusItems) {
+    try {
+      await adminPost('/admin/corpus', corpusItem);
+    } catch (err: unknown) {
+      console.error('Failed to insert item:', (err as Error).message);
+    }
   }
 }
 
 export async function triggerArthurPublish(item: CorpusItem, geminiApiKey: string): Promise<string> {
-  const client = getSupabaseClient() as any;
-  if (!client) throw new Error('Database client not initialized');
   if (!geminiApiKey) throw new Error('Gemini API key is required. Save it in the "Sovereign Keys" modal.');
 
   // Step 1: Update status to in_progress first to show visual feedback
-  const { error: statusErr } = await client
-    .from('content_corpus')
-    .update({ status: 'in_progress' })
-    .eq('id', item.id);
-  if (statusErr) throw new Error(`Status update failed: ${statusErr.message}`);
+  await adminPut(`/admin/corpus/${item.id}`, { status: 'in_progress' });
 
   // Step 2: Generate draft review content via Gemini
   // Detect if the planning notes request a Doctor Doom persona override
@@ -329,7 +290,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   const wordCount = (draft.content || '').split(/\s+/).length;
   const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
-  // Step 3: Insert article into articles database table
+  // Step 3: Insert article into articles database table via API server
   const articlePayload = {
     id: `art-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     title: item.title,
@@ -348,27 +309,16 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     status: 'pending_review',
     author_name: doomOverride ? 'Dr. Doom' : 'Dom Pineda',
     geo_region: 'Latveria',
-    faqs: draft.faqs || []
+    faqs: draft.faqs || [],
   };
-
-
-  const { error: insertErr } = await client
-    .from('articles')
-    .insert([articlePayload]);
-
-  if (insertErr) throw new Error(`Article insertion failed: ${insertErr.message}`);
+  await adminPost('/admin/articles', articlePayload);
 
   // Step 4: Complete loop and record live URL
-  const publishedUrl = `https://thedoomchronicle.netlify.app/#reviews`;
-  const { error: updateErr } = await client
-    .from('content_corpus')
-    .update({
-      status: 'published',
-      published_url: publishedUrl
-    })
-    .eq('id', item.id);
-
-  if (updateErr) throw new Error(`Corpus logging failed: ${updateErr.message}`);
+  const publishedUrl = `https://thedoomchronicle.net/#reviews`;
+  await adminPut(`/admin/corpus/${item.id}`, {
+    status: 'published',
+    published_url: publishedUrl,
+  });
 
   return publishedUrl;
 }
@@ -378,8 +328,6 @@ export async function rewriteArticleWithArthur(
   instructions: string,
   geminiApiKey: string
 ): Promise<void> {
-  const client = getSupabaseClient() as any;
-  if (!client) throw new Error('Database client not initialized');
   if (!geminiApiKey) throw new Error('Gemini API key is required. Save it in the "Sovereign Keys" modal.');
   if (!instructions.trim()) throw new Error('Rewrite instructions cannot be empty.');
 
@@ -526,22 +474,18 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   const wordCount = (draft.content || '').split(/\s+/).length;
   const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
-  const { error } = await client
-    .from('articles')
-    .update({
-      subtitle: draft.subtitle || '',
-      excerpt: draft.excerpt || '',
-      content: draft.content || '',
-      doom_rating: Number(draft.doomRating) || article.doomRating,
-      doom_verdict: draft.doomVerdict || '',
-      seo_title: draft.seoTitle || article.title,
-      seo_description: draft.seoDescription || draft.excerpt || '',
-      image_url: buildImageUrl(draft.imageQuery, article.category),
-      faqs: draft.faqs || [],
-      read_time: readTime,
-      status: 'pending_review',
-    })
-    .eq('id', article.id);
-
-  if (error) throw new Error(`Article rewrite save failed: ${error.message}`);
+  // Update article via API server (service-role, bypasses RLS)
+  await adminPut(`/admin/articles/${article.id}`, {
+    subtitle:        draft.subtitle || '',
+    excerpt:         draft.excerpt || '',
+    content:         draft.content || '',
+    doom_rating:     Number(draft.doomRating) || article.doomRating,
+    doom_verdict:    draft.doomVerdict || '',
+    seo_title:       draft.seoTitle || article.title,
+    seo_description: draft.seoDescription || draft.excerpt || '',
+    image_url:       buildImageUrl(draft.imageQuery, article.category),
+    faqs:            draft.faqs || [],
+    read_time:       readTime,
+    status:          'pending_review',
+  });
 }

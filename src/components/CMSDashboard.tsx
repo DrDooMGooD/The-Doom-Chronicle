@@ -128,7 +128,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     setIsLoading(true);
     setAuthError(null);
     try {
-      const data = await fetchAdminArticles(passcode);
+      const data = await fetchAdminArticles();
       setArticles(data);
       const registryData = await fetchRegistryEntries();
       setRegistryEntries(registryData);
@@ -165,7 +165,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   const reloadArticles = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchAdminArticles(passcode);
+      const data = await fetchAdminArticles();
       setArticles(data);
       const registryData = await fetchRegistryEntries();
       setRegistryEntries(registryData);
@@ -180,7 +180,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
 
   const handleApprove = async (articleId: string) => {
     try {
-      await updateArticle(articleId, { status: 'published' }, passcode);
+      await updateArticle(articleId, { status: 'published' });
       await reloadArticles();
     } catch (err: any) {
       alert(err.message || 'Failed to approve scroll');
@@ -192,7 +192,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
       return;
     }
     try {
-      await deleteArticle(articleId, passcode);
+      await deleteArticle(articleId);
       await reloadArticles();
     } catch (err: any) {
       alert(err.message || 'Failed to incinerate scroll');
@@ -204,7 +204,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     if (!replyText.trim()) return;
     try {
       setIsLoading(true);
-      const updated = await respondToRegistryEntry(id, replyText, passcode);
+      const updated = await respondToRegistryEntry(id, replyText);
       setRegistryEntries(prev => prev.map(e => e.id === id ? updated : e));
       alert('Sovereign response successfully dicted!');
     } catch (err: any) {
@@ -220,7 +220,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     }
     try {
       setIsLoading(true);
-      await deleteRegistryEntry(id, passcode);
+      await deleteRegistryEntry(id);
       setRegistryEntries(prev => prev.filter(e => e.id !== id));
       alert('Signature incinerated.');
     } catch (err: any) {
@@ -456,10 +456,10 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     try {
       if (editingArticle) {
         // Edit flow
-        await updateArticle(editingArticle.id, payload, passcode);
+        await updateArticle(editingArticle.id, payload);
       } else {
         // Create flow
-        await createArticle(payload, passcode);
+        await createArticle(payload);
       }
       setIsFormOpen(false);
       await reloadArticles();
@@ -1254,9 +1254,9 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                           alert(`Save failed: ${err.message}`);
                         }
                       }}
-                      className="bg-amber-500 hover:bg-amber-400 text-black font-comic text-sm uppercase px-6 py-2.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer font-bold"
+                      className="bg-amber-500 hover:bg-amber-400 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none text-black font-sans font-bold text-sm uppercase tracking-widest px-6 py-3 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4 shrink-0" />
                       <span>Save Payment Credentials</span>
                     </button>
                   </div>
@@ -1364,9 +1364,9 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                         setNewWishItemBuyUrl('');
                         alert('🎁 Wishlist Item Added to Public Ledger!');
                       }}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-comic text-sm uppercase px-6 py-2.5 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer font-bold"
+                      className="bg-emerald-600 hover:bg-emerald-500 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none text-white font-sans font-bold text-sm uppercase tracking-widest px-6 py-3 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center space-x-2 cursor-pointer transition-all"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 shrink-0" />
                       <span>Add Item to Wishlist</span>
                     </button>
                   </div>

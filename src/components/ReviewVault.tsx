@@ -1,4 +1,4 @@
-import { useState, useMemo, FormEvent, useEffect } from 'react';
+import { useState, useMemo, FormEvent, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Film, Gamepad2, Book, AlertTriangle, Shield, Check, Flame, Star, Settings, Loader2 } from 'lucide-react';
 import { Article } from '../types';
@@ -73,6 +73,27 @@ export default function ReviewVault() {
     }
   });
 
+  // Turnstile CAPTCHA for proposal form
+  const pitchTurnstileRef = useRef<HTMLDivElement>(null);
+  const [pitchTurnstileToken, setPitchTurnstileToken] = useState<string>('');
+  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
+  useEffect(() => {
+    if (!pitchTurnstileRef.current) return;
+    const win = window as any;
+    if (!win.turnstile) return;
+    const id = win.turnstile.render(pitchTurnstileRef.current, {
+      sitekey: turnstileSiteKey,
+      action: 'proposal',
+      callback: (token: string) => setPitchTurnstileToken(token),
+      'expired-callback': () => setPitchTurnstileToken(''),
+      'error-callback': () => setPitchTurnstileToken(''),
+      theme: 'dark',
+    });
+    return () => { try { win.turnstile.remove(id); } catch { /* ignore */ } };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Dynamic injection of schema JSON-LD inside head
   useEffect(() => {
     if (!selectedArticle) return;
@@ -94,12 +115,21 @@ export default function ReviewVault() {
   }, [selectedArticle]);
 
   const filteredArticles = useMemo(() => {
-    return articlesList.filter((art) => {
+    const filtered = articlesList.filter((art) => {
       const matchesCategory = selectedCategory === 'all' || art.category === selectedCategory;
       const matchesSearch = art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             art.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
+    });
+
+    return filtered.sort((a, b) => {
+      const matchA = a.id.match(/art-(\d+)/);
+      const matchB = b.id.match(/art-(\d+)/);
+      const timeA = Date.parse(a.publishDate) || (matchA ? parseInt(matchA[1], 10) : 0);
+      const timeB = Date.parse(b.publishDate) || (matchB ? parseInt(matchB[1], 10) : 0);
+      if (timeA !== timeB) return timeB - timeA;
+      return b.id.localeCompare(a.id);
     });
   }, [selectedCategory, searchQuery, articlesList]);
 
@@ -139,7 +169,12 @@ export default function ReviewVault() {
         category: pitchCategory,
         manuscript: pitchText,
         doom_verdict: message,
+        cfTurnstileToken: pitchTurnstileToken,
       });
+      // Reset CAPTCHA after submission
+      setPitchTurnstileToken('');
+      const win = window as any;
+      if (win.turnstile) win.turnstile.reset();
     } catch (dbErr) {
       console.error('Error submitting proposal to DB:', dbErr);
     }
@@ -491,6 +526,9 @@ export default function ReviewVault() {
                     </div>
                   </div>
                 )}
+
+                {/* Turnstile CAPTCHA widget for proposal */}
+                <div ref={pitchTurnstileRef} className="my-2" />
 
                 <div className="flex justify-between items-center pt-2">
                   <span 
