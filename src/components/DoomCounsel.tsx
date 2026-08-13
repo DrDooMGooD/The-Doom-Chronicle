@@ -78,14 +78,14 @@ export default function DoomCounsel() {
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover object-center filter brightness-60 contrast-110 pointer-events-none z-0"
+        className="absolute inset-0 w-full h-full object-cover object-center filter brightness-95 contrast-105 pointer-events-none z-0"
       >
         <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
       </video>
 
-      {/* Dark Vignette & Halftone Overlay for High Text Readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 pointer-events-none z-0" />
-      <div className="absolute inset-0 halftone-bg opacity-25 pointer-events-none z-0" />
+      {/* Light Vignette Overlay for Crisp Visibility */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50 pointer-events-none z-0" />
+      <div className="absolute inset-0 halftone-bg opacity-10 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
