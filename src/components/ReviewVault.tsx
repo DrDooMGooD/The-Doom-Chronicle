@@ -76,7 +76,7 @@ export default function ReviewVault() {
   // Turnstile CAPTCHA for proposal form
   const pitchTurnstileRef = useRef<HTMLDivElement>(null);
   const [pitchTurnstileToken, setPitchTurnstileToken] = useState<string>('');
-  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEOnYXzHlK3NuVxZ';
 
   useEffect(() => {
     if (!pitchTurnstileRef.current) return;

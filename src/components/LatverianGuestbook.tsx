@@ -70,7 +70,7 @@ export default function LatverianGuestbook() {
   // Turnstile CAPTCHA
   const turnstileRef = useRef<HTMLDivElement>(null);
   const [cfTurnstileToken, setCfTurnstileToken] = useState<string>('');
-  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+  const turnstileSiteKey = (import.meta as any).env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEOnYXzHlK3NuVxZ';
 
   useEffect(() => {
     if (!turnstileRef.current) return;
