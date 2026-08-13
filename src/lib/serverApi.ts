@@ -43,6 +43,9 @@ async function request<T>(
   });
 
   if (!res.ok) {
+    if ([404, 405, 502, 503, 504].includes(res.status)) {
+      throw new Error('API_SERVER_OFFLINE');
+    }
     let message = `HTTP ${res.status}`;
     try {
       const err = await res.json() as { error?: string };

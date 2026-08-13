@@ -204,7 +204,14 @@ export async function triggerArthurPublish(item: CorpusItem, geminiApiKey: strin
   if (!geminiApiKey) throw new Error('Gemini API key is required. Save it in the "Sovereign Keys" modal.');
 
   // Step 1: Update status to in_progress first to show visual feedback
-  await adminPut(`/admin/corpus/${item.id}`, { status: 'in_progress' });
+  try {
+    await adminPut(`/admin/corpus/${item.id}`, { status: 'in_progress' });
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (client) await client.from('content_corpus').update({ status: 'in_progress' }).eq('id', item.id);
+    }
+  }
 
   // Step 2: Generate draft review content via Gemini
   // Detect if the planning notes request a Doctor Doom persona override
@@ -356,14 +363,28 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     geo_region: 'Latveria',
     faqs: draft.faqs || [],
   };
-  await adminPost('/admin/articles', articlePayload);
+  try {
+    await adminPost('/admin/articles', articlePayload);
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (client) await client.from('articles').insert([articlePayload]);
+    }
+  }
 
   // Step 4: Complete loop and record live URL
   const publishedUrl = `https://thedoomchronicle.net/#reviews`;
-  await adminPut(`/admin/corpus/${item.id}`, {
-    status: 'published',
-    published_url: publishedUrl,
-  });
+  try {
+    await adminPut(`/admin/corpus/${item.id}`, {
+      status: 'published',
+      published_url: publishedUrl,
+    });
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (client) await client.from('content_corpus').update({ status: 'published', published_url: publishedUrl }).eq('id', item.id);
+    }
+  }
 
   return publishedUrl;
 }
@@ -519,8 +540,8 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   const wordCount = (draft.content || '').split(/\s+/).length;
   const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
-  // Update article via API server (service-role, bypasses RLS)
-  await adminPut(`/admin/articles/${article.id}`, {
+  // Update article via API server (with client-side fallback if server offline)
+  const updatePayload = {
     subtitle:        draft.subtitle || '',
     excerpt:         draft.excerpt || '',
     content:         draft.content || '',
@@ -532,5 +553,14 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
     faqs:            draft.faqs || [],
     read_time:       readTime,
     status:          'pending_review',
-  });
+  };
+
+  try {
+    await adminPut(`/admin/articles/${article.id}`, updatePayload);
+  } catch (err: any) {
+    if (err.message === 'API_SERVER_OFFLINE') {
+      const client = getSupabaseClient() as any;
+      if (client) await client.from('articles').update(updatePayload).eq('id', article.id);
+    }
+  }
 }
