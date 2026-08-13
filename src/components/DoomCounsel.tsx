@@ -5,6 +5,7 @@ import { doomQuotes } from '../data';
 import { Article } from '../types';
 import { fetchArticles } from '../services/api';
 import { generateDoomResponse } from '../services/gemini';
+import LatverianFlag from './LatverianFlag';
 
 export default function DoomCounsel() {
   const [selectedMood, setSelectedMood] = useState<'stern' | 'wrathful' | 'triumphant' | 'benevolent'>('stern');
@@ -90,16 +91,26 @@ export default function DoomCounsel() {
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Section Header */}
-        <div className="relative mb-12 bg-black/80 backdrop-blur-md border-4 border-black p-6 shadow-comic text-center skew-comic-l">
-          <span className="absolute -top-4 left-6 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[-3deg] shadow-comic tracking-wide">
-            STATE ADVISORY DECK
-          </span>
-          <h2 className="font-comic text-5xl text-white uppercase tracking-wider">
-            SUBMIT YOUR PETITION
-          </h2>
-          <p className="font-mono text-xs text-stone-300 mt-2">
-            SUBMIT YOUR INQUIRIES DIRECTLY TO THE THRONE OF LATVERIA
-          </p>
+        <div className="relative mb-12 bg-black/80 backdrop-blur-md border-4 border-black p-6 shadow-comic text-center skew-comic-l flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="hidden sm:block">
+            <LatverianFlag size="md" />
+          </div>
+
+          <div className="flex-1 text-center">
+            <span className="absolute -top-4 left-6 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[-3deg] shadow-comic tracking-wide">
+              STATE ADVISORY DECK
+            </span>
+            <h2 className="font-comic text-4xl sm:text-5xl text-white uppercase tracking-wider">
+              SUBMIT YOUR PETITION
+            </h2>
+            <p className="font-mono text-xs text-stone-300 mt-2">
+              SUBMIT YOUR INQUIRIES DIRECTLY TO THE THRONE OF LATVERIA
+            </p>
+          </div>
+
+          <div className="hidden sm:block">
+            <LatverianFlag size="md" showPole={false} />
+          </div>
         </div>
 
         {/* Console layout */}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Skull, BookOpen, PenTool, MessageSquare, Eye, Menu, X, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import LatverianFlag from './LatverianFlag';
 
 interface NavbarProps {
   onReplayIntro: () => void;
@@ -35,24 +36,27 @@ export default function Navbar({ onReplayIntro, onToggleCMS, showCMS }: NavbarPr
       <div className="max-w-7xl mx-auto flex items-center justify-between">
 
         {/* Brand Logo */}
-        <div
-          id="doom-logo"
-          onClick={() => {
-            if (showCMS) onToggleCMS();
-            handleNav('/');
-          }}
-          className="flex items-center space-x-1.5 sm:space-x-2.5 cursor-pointer group bg-gradient-to-r from-emerald-850 via-emerald-750 to-emerald-950 hover:from-rose-800 hover:via-rose-750 hover:to-rose-950 border-3 border-black px-2 sm:px-4 py-1.5 sm:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all glossy-highlight rounded-xs"
-        >
-          <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
-          <span className="hidden sm:inline font-comic text-xl sm:text-2xl tracking-widest text-white uppercase select-none text-shadow-doom group-hover:text-shadow-doom-hover transition-all duration-300">
-            DOOM CHRONICLE
-          </span>
-          <span className="sm:hidden font-comic text-lg tracking-widest text-white uppercase select-none text-shadow-doom">
-            DOOM
-          </span>
-          <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 border-2 border-black rounded-xs shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] tracking-wide animate-pulse">
-            LTV
-          </span>
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <LatverianFlag size="sm" className="hidden xs:inline-flex" />
+          <div
+            id="doom-logo"
+            onClick={() => {
+              if (showCMS) onToggleCMS();
+              handleNav('/');
+            }}
+            className="flex items-center space-x-1.5 sm:space-x-2.5 cursor-pointer group bg-gradient-to-r from-emerald-850 via-emerald-750 to-emerald-950 hover:from-rose-800 hover:via-rose-750 hover:to-rose-950 border-3 border-black px-2 sm:px-4 py-1.5 sm:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all glossy-highlight rounded-xs"
+          >
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 fill-yellow-400 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
+            <span className="hidden sm:inline font-comic text-xl sm:text-2xl tracking-widest text-white uppercase select-none text-shadow-doom group-hover:text-shadow-doom-hover transition-all duration-300">
+              DOOM CHRONICLE
+            </span>
+            <span className="sm:hidden font-comic text-lg tracking-widest text-white uppercase select-none text-shadow-doom">
+              DOOM
+            </span>
+            <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 border-2 border-black rounded-xs shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] tracking-wide animate-pulse">
+              LTV
+            </span>
+          </div>
         </div>
 
         {/* Desktop Links */}
