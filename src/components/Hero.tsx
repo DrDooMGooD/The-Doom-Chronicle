@@ -43,8 +43,24 @@ export default function Hero({ onExploreClick }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen pt-24 pb-16 flex items-center justify-center overflow-hidden halftone-bg px-4 sm:px-6 lg:px-8 bg-stone-900 border-b-8 border-black"
+      className="relative min-h-screen pt-24 pb-16 flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 bg-stone-950 border-b-8 border-black"
     >
+      {/* Super Doom Video Backdrop Layer */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover object-center filter brightness-85 contrast-110 pointer-events-none z-0"
+      >
+        <source src="/super_doom.mp4" type="video/mp4" />
+        <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
+      </video>
+
+      {/* Atmospheric Overlay & Halftone Tint */}
+      <div className="absolute inset-0 bg-gradient-to-b from-stone-950/70 via-stone-950/40 to-stone-950/85 pointer-events-none z-0" />
+      <div className="absolute inset-0 halftone-bg opacity-20 pointer-events-none z-0" />
+
       {/* Absolute Skewed Decorative Panels (Red and Green) to emulate comic layouts */}
       <div className="absolute top-0 right-0 w-1/3 h-full bg-red-700/10 skew-x-12 transform origin-top pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-1/4 h-3/4 bg-emerald-950/20 -skew-x-12 transform origin-bottom pointer-events-none" />

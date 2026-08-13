@@ -191,7 +191,7 @@ export default function App() {
         loop
         muted
         playsInline
-        className="fixed inset-0 w-full h-full object-cover object-center filter brightness-40 contrast-125 pointer-events-none z-0 opacity-45"
+        className="fixed inset-0 w-full h-full object-cover object-center filter brightness-75 contrast-115 pointer-events-none z-0 opacity-65"
       >
         <source src="/super_doom.mp4" type="video/mp4" />
         <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
