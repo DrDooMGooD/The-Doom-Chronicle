@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 // @ts-ignore
 import drDoomImage from '../assets/dr_doom.jpg';
-import { Shield, Skull, Eye, HelpCircle, Sparkles, AlertCircle, Brain, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { Shield, Skull, Eye, HelpCircle, Sparkles, AlertCircle, Brain, CheckCircle, XCircle, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
 interface DoomIntroProps {
   onComplete: () => void;
@@ -51,9 +51,11 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
+type TransitionState = 'idle' | 'glitch' | 'video' | 'zoom';
+
 export default function DoomIntro({ onComplete }: DoomIntroProps) {
   // Shuffle all questions on mount with randomized options
-  const [shuffledQuestions, setShuffledQuestions] = useState<TriviaQuestion[]>(() => {
+  const [shuffledQuestions] = useState<TriviaQuestion[]>(() => {
     const shuffledQ = shuffleArray(DOOM_TRIVIA);
     return shuffledQ.map(q => ({
       ...q,
@@ -67,11 +69,17 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [triviaStatus, setTriviaStatus] = useState<'unanswered' | 'correct' | 'incorrect'>('unanswered');
   const [showHint, setShowHint] = useState(false);
-  const [isZooming, setIsZooming] = useState(false);
+  
+  // Transition State Machine
+  const [transitionState, setTransitionState] = useState<TransitionState>('idle');
+  const [isMuted, setIsMuted] = useState(true);
 
   // Hidden/Secret image clicks handler
   const [imageClicks, setImageClicks] = useState(0);
   const [clickMessage, setClickMessage] = useState<string | null>(null);
+
+  // Video Ref
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Image Source state — using local asset
   const [imgUrl, setImgUrl] = useState<string>(drDoomImage);
@@ -80,39 +88,53 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
   const handleImageError = () => {
     if (!isImgError) {
       setIsImgError(true);
-      // Fallback to a high-quality stylized metallic helmet/mask illustration
       setImgUrl('https://images.unsplash.com/photo-1608889174637-3c44f6326f2a?w=800&q=80');
     }
   };
 
-  const handleApproach = () => {
-    setIsZooming(true);
+  // Trigger full transition sequence: Glitch -> Video Playthrough -> Zoom in -> Complete
+  const startTransitionSequence = () => {
+    if (transitionState !== 'idle') return;
+
+    // Step 1: Glitch Animation
+    setTransitionState('glitch');
+
+    // Step 2: Video Playthrough after 800ms glitch burst
     setTimeout(() => {
-      onComplete();
-    }, 1800);
+      setTransitionState('video');
+      
+      // Step 3: Zoom in after video has played for 2.6 seconds
+      setTimeout(() => {
+        setTransitionState('zoom');
+        
+        // Step 4: Complete transition and enter app after 1.5s deep zoom
+        setTimeout(() => {
+          onComplete();
+        }, 1500);
+      }, 2600);
+    }, 800);
   };
 
   // Triggered when user selects a trivia answer
   const handleSelectOption = (option: string) => {
-    if (triviaStatus === 'correct' || isZooming) return;
+    if (triviaStatus === 'correct' || transitionState !== 'idle') return;
     
     setSelectedOption(option);
     if (option === currentQuestion.correct) {
       setTriviaStatus('correct');
-      setClickMessage(null); // Clear click warnings
-      // Delay slightly for dramatic flair before entering
+      setClickMessage(null);
+      // Small dramatic beat before sequence starts
       setTimeout(() => {
-        handleApproach();
-      }, 1500);
+        startTransitionSequence();
+      }, 800);
     } else {
       setTriviaStatus('incorrect');
-      // Decrement clicks just in case or keep separate
     }
   };
 
-  // Secret interactive click pattern on the image
+  // Secret interactive click pattern on the portrait
   const handleImageClick = () => {
-    if (isZooming || triviaStatus === 'correct') return;
+    if (transitionState !== 'idle' || triviaStatus === 'correct') return;
 
     const nextClicks = imageClicks + 1;
     setImageClicks(nextClicks);
@@ -123,7 +145,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
       setClickMessage("CEASE THY IMPERTINENT TAPPING, INSECT!");
     } else if (nextClicks >= 3) {
       setClickMessage("YOU HAVE AWOKEN THE WRATH OF LATVERIA! PORTAL OVERRIDE ACTIVE!");
-      handleApproach();
+      startTransitionSequence();
     }
   };
 
@@ -131,9 +153,10 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
     setSelectedOption(null);
     setTriviaStatus('unanswered');
     setShowHint(false);
-    // Cycle to the next shuffled question
     setQuestionIndex((prev) => (prev + 1) % shuffledQuestions.length);
   };
+
+  const isTransitioning = transitionState !== 'idle';
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-950 overflow-y-auto font-mono select-none">
@@ -142,21 +165,136 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
       <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-repeat halftone-bg" />
       <div className="absolute inset-0 bg-radial-gradient from-emerald-950/20 to-stone-950 pointer-events-none" />
       
+      {/* Dynamic CRT Scanline wipe overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+        <div className="w-full h-1 bg-emerald-500 shadow-[0_0_15px_#10b981] animate-scanline" />
+      </div>
+
       {/* Ambient Red/Green Alert Border Indicator based on state */}
       <div className={`absolute inset-0 border-4 sm:border-8 pointer-events-none transition-colors duration-500 ${
-        triviaStatus === 'correct' 
-          ? 'border-emerald-950/30 animate-pulse' 
+        triviaStatus === 'correct' || isTransitioning
+          ? 'border-emerald-950/40 animate-pulse' 
           : triviaStatus === 'incorrect' 
           ? 'border-rose-950/40' 
           : 'border-stone-900/40'
       }`} />
 
-      {/* Main scrolling wrapper */}
+      {/* ─── PHASE 1: FULLSCREEN CYBER GLITCH BURST OVERLAY WITH GLITCH.MP4 ───────── */}
+      <AnimatePresence>
+        {transitionState === 'glitch' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 overflow-hidden animate-glitch-flash"
+          >
+            {/* The Glitch Video Element */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover filter brightness-125 contrast-150 mix-blend-screen opacity-90"
+            >
+              <source src="/glitch.mp4" type="video/mp4" />
+            </video>
+
+            <div className="absolute inset-0 bg-emerald-500/20 mix-blend-color-dodge animate-glitch pointer-events-none" />
+            <div className="absolute inset-0 halftone-red opacity-40 animate-pulse pointer-events-none" />
+            
+            <div className="relative z-10 text-center space-y-4">
+              <Skull className="w-16 h-16 text-emerald-400 mx-auto animate-bounce filter drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+              <h2 className="font-comic text-4xl sm:text-6xl text-rose-500 uppercase tracking-widest animate-rgb-shift">
+                LATVERIAN SYSTEM BREACH
+              </h2>
+              <p className="font-mono text-emerald-400 text-sm sm:text-base font-bold uppercase tracking-widest bg-black/80 px-4 py-2 border border-emerald-500 shadow-comic">
+                ⚡ OVERRIDE CONFIRMED • INITIATING PORTAL CINEMATIC . . .
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 2 & 3: FULLSCREEN VIDEO PLAYTHROUGH (SUPER DOOM.MP4) & DEEP ZOOM CONTAINER ─────── */}
+      <AnimatePresence>
+        {(transitionState === 'video' || transitionState === 'zoom') && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={transitionState === 'zoom' ? {
+              opacity: 1,
+              scale: 55,
+              transition: { duration: 1.5, ease: [0.85, 0, 0.15, 1] }
+            } : {
+              opacity: 1,
+              scale: 1,
+              transition: { duration: 0.4 }
+            }}
+            style={{ originX: 0.5, originY: 0.45 }}
+            className="fixed inset-0 z-50 bg-black overflow-hidden flex items-center justify-center"
+          >
+            {/* The Video Element */}
+            <video
+              ref={videoRef}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              className="w-full h-full object-cover filter brightness-105 contrast-110"
+            >
+              <source src="/super_doom.mp4" type="video/mp4" />
+              <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
+            </video>
+
+            {/* Video HUD State Overlay (Fades out when zooming) */}
+            {transitionState === 'video' && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute top-6 inset-x-0 mx-auto max-w-xl px-4 pointer-events-none flex flex-col items-center"
+              >
+                <div className="bg-black/80 border-2 border-emerald-500 px-6 py-3 shadow-comic flex items-center space-x-3">
+                  <Shield className="w-5 h-5 text-emerald-400 animate-spin" />
+                  <span className="font-comic text-lg sm:text-xl text-white tracking-widest uppercase">
+                    SOVEREIGN THRONE GATEWAY LIVE
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono text-emerald-400 mt-2 bg-stone-950/90 px-3 py-1 border border-emerald-900 font-bold uppercase tracking-wider">
+                  NEURAL SYNCHRONIZATION ACTIVE • ZOOMING INTO DOMAIN
+                </span>
+              </motion.div>
+            )}
+
+            {/* Audio Toggle Button during video playback */}
+            {transitionState === 'video' && (
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                className="absolute bottom-6 right-6 z-50 bg-stone-900/90 hover:bg-stone-800 text-emerald-400 border-2 border-black p-3 shadow-comic transition-all cursor-pointer flex items-center space-x-2 font-mono text-xs font-bold uppercase"
+              >
+                {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                <span>{isMuted ? 'UNMUTE AUDIO' : 'MUTED'}</span>
+              </button>
+            )}
+
+            {/* Emerald Energy Flash Overlay during deep zoom */}
+            {transitionState === 'zoom' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.5, 1] }}
+                transition={{ duration: 1.4, times: [0, 0.5, 1] }}
+                className="absolute inset-0 bg-emerald-500 filter blur-md mix-blend-screen pointer-events-none"
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── MAIN GATEWAY INTERFACE (DISPLAYED DURING IDLE) ────────────────────────── */}
       <div className="min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 py-8 sm:py-12 max-w-5xl mx-auto relative z-10">
 
         {/* Latverian Top Banner */}
         <AnimatePresence>
-          {!isZooming && (
+          {!isTransitioning && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -181,81 +319,51 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
           {/* Left Side: The Sovereign Portrait (Zooming/Interactive Image) */}
           <div className="md:col-span-5 flex flex-col justify-center h-64 sm:h-80 md:h-auto md:min-h-[400px]">
             <motion.div
-              animate={isZooming ? {
-                scale: 45,
-                transition: { duration: 1.8, ease: [0.85, 0, 0.15, 1] }
-              } : {
-                scale: 1,
-                transition: { duration: 0.5 }
-              }}
-              style={{
-                originX: 0.5,
-                originY: 0.4
-              }}
-              className={`${
-                isZooming 
-                  ? 'fixed inset-0 z-50 border-0 m-0 rounded-none' 
-                  : 'relative w-full h-full border-4 border-black bg-stone-900 rounded-lg shadow-comic-green overflow-hidden flex flex-col justify-between'
-              }`}
+              animate={{ scale: 1 }}
+              className="relative w-full h-full border-4 border-black bg-stone-900 rounded-lg shadow-comic-green overflow-hidden flex flex-col justify-between"
             >
               {/* The Image Container */}
               <div 
                 onClick={handleImageClick}
-                className="w-full h-full relative cursor-pointer overflow-hidden flex-grow"
+                className="w-full h-full relative cursor-pointer overflow-hidden flex-grow group"
               >
                 <img
                   src={imgUrl}
                   alt="Sovereign Lord Doom"
                   onError={handleImageError}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain bg-stone-950 select-none pointer-events-none"
+                  className="w-full h-full object-contain bg-stone-950 select-none pointer-events-none group-hover:scale-105 transition-transform duration-300"
                 />
 
                 {/* Grid / Scanning Laser Line Overlay */}
-                {!isZooming && (
-                  <>
-                    <div className="absolute inset-0 pointer-events-none border border-emerald-500/20" />
-                    <div className="absolute inset-x-0 h-0.5 bg-emerald-500/30 shadow-[0_0_8px_#10b981] top-1/3 animate-bounce pointer-events-none" />
-                    
-                    {/* Retro comic corner framings */}
-                    <div className="absolute top-3 left-3 border-t-2 border-l-2 border-emerald-500 w-4 h-4 pointer-events-none" />
-                    <div className="absolute top-3 right-3 border-t-2 border-r-2 border-emerald-500 w-4 h-4 pointer-events-none" />
-                    <div className="absolute bottom-3 left-3 border-b-2 border-l-2 border-emerald-500 w-4 h-4 pointer-events-none" />
-                    <div className="absolute bottom-3 right-3 border-b-2 border-r-2 border-emerald-500 w-4 h-4 pointer-events-none" />
+                <div className="absolute inset-0 pointer-events-none border border-emerald-500/20" />
+                <div className="absolute inset-x-0 h-0.5 bg-emerald-500/40 shadow-[0_0_8px_#10b981] top-1/3 animate-bounce pointer-events-none" />
+                
+                {/* Retro comic corner framings */}
+                <div className="absolute top-3 left-3 border-t-2 border-l-2 border-emerald-500 w-4 h-4 pointer-events-none" />
+                <div className="absolute top-3 right-3 border-t-2 border-r-2 border-emerald-500 w-4 h-4 pointer-events-none" />
+                <div className="absolute bottom-3 left-3 border-b-2 border-l-2 border-emerald-500 w-4 h-4 pointer-events-none" />
+                <div className="absolute bottom-3 right-3 border-b-2 border-r-2 border-emerald-500 w-4 h-4 pointer-events-none" />
 
-                    {/* Target Crosshair */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                      <div className="w-10 h-10 rounded-full border border-dashed border-red-500 animate-spin" />
-                    </div>
-                  </>
-                )}
+                {/* Target Crosshair */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                  <div className="w-10 h-10 rounded-full border border-dashed border-red-500 animate-spin" />
+                </div>
               </div>
 
               {/* Bottom Caption Overlay */}
-              {!isZooming && (
-                <div className="bg-black/90 border-t-2 border-black p-2.5 text-center">
-                  <span className="text-xs sm:text-sm text-stone-300 font-sans tracking-wide font-medium block">
-                    PORTRAIT SECURE • CLICK MASK FOR SECRET CHRONICLE CODES
-                  </span>
-                </div>
-              )}
-
-              {/* Portal Flash Overlay that triggers inside the zoom */}
-              {isZooming && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 0.4, 1] }}
-                  transition={{ duration: 1.4, times: [0, 0.6, 1] }}
-                  className="absolute inset-0 bg-emerald-500 rounded-none filter blur-md mix-blend-screen pointer-events-none"
-                />
-              )}
+              <div className="bg-black/90 border-t-2 border-black p-2.5 text-center">
+                <span className="text-xs sm:text-sm text-stone-300 font-sans tracking-wide font-medium block">
+                  PORTRAIT SECURE • CLICK 3X FOR OVERRIDE GLITCH BREACH
+                </span>
+              </div>
             </motion.div>
           </div>
 
           {/* Right Side: The Latverian Gatekeeper Trivia Board */}
           <div className="md:col-span-7 flex flex-col">
             <AnimatePresence mode="wait">
-              {!isZooming && (
+              {!isTransitioning && (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -283,7 +391,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                       ) : triviaStatus === 'correct' ? (
                         <div className="w-full bg-emerald-950/50 border border-emerald-500 text-emerald-400 text-xs px-3 py-2 flex items-center space-x-2 rounded animate-pulse">
                           <CheckCircle className="w-4 h-4 shrink-0" />
-                          <span className="font-bold uppercase text-xs sm:text-sm">CORRECT! ACCESS GRANTED TO THE DOMAIN. PORTAL OPENING...</span>
+                          <span className="font-bold uppercase text-xs sm:text-sm">CORRECT! ACCESS GRANTED. INITIATING CINEMATIC BREACH...</span>
                         </div>
                       ) : triviaStatus === 'incorrect' ? (
                         <div className="w-full bg-rose-950/50 border border-rose-600 text-rose-400 text-xs px-3 py-2 flex items-center space-x-2 rounded">
@@ -292,7 +400,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                         </div>
                       ) : (
                         <p className="text-xs sm:text-sm text-stone-300 font-sans leading-relaxed">
-                          To breach the gateway, you must demonstrate a standard level of respect and historical knowledge regarding the Sovereign.
+                          To breach the gateway, demonstrate respect and historical knowledge regarding the Sovereign.
                         </p>
                       )}
                     </div>
@@ -321,7 +429,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                         return (
                           <button
                             key={option}
-                            disabled={triviaStatus === 'correct' || isZooming}
+                            disabled={triviaStatus === 'correct' || isTransitioning}
                             onClick={() => handleSelectOption(option)}
                             className={`p-3 rounded text-left text-xs sm:text-sm uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center justify-between min-h-[44px] ${btnClass}`}
                           >
@@ -357,7 +465,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                   </div>
 
                   {/* Hint Text Display */}
-                  {showHint && !isZooming && (
+                  {showHint && !isTransitioning && (
                     <div className="mt-2.5 bg-stone-950/90 border border-emerald-900 p-2 text-xs sm:text-sm text-stone-300 font-sans leading-relaxed">
                       <strong className="text-emerald-400 uppercase font-mono mr-1">Hint:</strong> 
                       {currentQuestion.hint}
@@ -372,7 +480,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
 
         {/* Main Bottom Title and Actions */}
         <AnimatePresence>
-          {!isZooming && (
+          {!isTransitioning && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -393,7 +501,7 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                 </p>
               </div>
 
-              {/* Direct Entry Button (Made highly apparent and styled) */}
+              {/* Direct Entry Button (Triggers sequence or fast entry) */}
               <div className="flex flex-col items-center space-y-2 pt-1">
                 <span className="text-xs sm:text-sm text-stone-300 uppercase tracking-widest font-bold">
                   Tired of Gatekeeper Trials?
@@ -402,10 +510,10 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-emerald-400 rounded blur opacity-25 group-hover:opacity-45 transition duration-300" />
                   <button
-                    onClick={onComplete}
+                    onClick={startTransitionSequence}
                     className="relative bg-stone-900 hover:bg-stone-850 text-emerald-400 hover:text-emerald-300 font-comic text-xs sm:text-sm uppercase px-6 py-2.5 border-2 border-emerald-950 hover:border-emerald-600 shadow-[3px_3px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_rgba(0,0,0,1)] transition-all cursor-pointer tracking-wider font-bold"
                   >
-                    ⚡ DIRECT ENTRY (Skip Security Gate)
+                    ⚡ DIRECT ENTRY (Trigger Portal Glitch)
                   </button>
                 </div>
               </div>
@@ -415,10 +523,10 @@ export default function DoomIntro({ onComplete }: DoomIntroProps) {
         </AnimatePresence>
 
         {/* Cinematic Ambient Status Labels */}
-        {!isZooming && (
+        {!isTransitioning && (
           <div className="hidden sm:flex absolute bottom-4 left-4 text-xs font-mono text-stone-400 uppercase items-center space-x-2 select-none font-bold">
             <Shield className="w-4 h-4 animate-spin text-emerald-500" />
-            <span>[SYSTEM: TRIVIA PROTOCOLS ACTIVE • DIRECT ENTRY POWERED]</span>
+            <span>[SYSTEM: TRIVIA PROTOCOLS ACTIVE • PORTAL OVERRIDE ONLINE]</span>
           </div>
         )}
       </div>

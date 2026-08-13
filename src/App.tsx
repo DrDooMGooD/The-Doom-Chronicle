@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import HomePortals from './components/HomePortals';
 import DoomIntro from './components/DoomIntro';
 import ScrollToTop from './components/ScrollToTop';
+import PageTransition from './components/PageTransition';
 import VaultPage from './pages/VaultPage';
 import CounselPage from './pages/CounselPage';
 import GuestbookPage from './pages/GuestbookPage';
@@ -183,8 +185,21 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-stone-950 text-stone-100 overflow-x-hidden selection:bg-rose-600 selection:text-white">
-      {/* Atmospheric scanline overlay */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-repeat z-40 halftone-bg" />
+      {/* Continuous Looping Video Background Layer */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="fixed inset-0 w-full h-full object-cover object-center filter brightness-40 contrast-125 pointer-events-none z-0 opacity-45"
+      >
+        <source src="/super_doom.mp4" type="video/mp4" />
+        <source src="/doom_sitting_on_his_throne.mp4" type="video/mp4" />
+      </video>
+
+      {/* Atmospheric scanline overlay & gradient vignette */}
+      <div className="fixed inset-0 bg-gradient-to-b from-stone-950/80 via-stone-950/40 to-stone-950/90 pointer-events-none z-0" />
+      <div className="fixed inset-0 pointer-events-none opacity-[0.04] bg-repeat z-40 halftone-bg" />
 
       {/* Scroll-to-top resets on route change */}
       <ScrollToTop />
@@ -203,18 +218,22 @@ export default function App() {
         showCMS={isCMSRoute}
       />
 
-      {/* Page Routes */}
-      <Routes>
-        <Route path="/" element={<HomePage onReplayIntro={handleReplayIntro} />} />
-        <Route path="/vault" element={<VaultPage />} />
-        <Route path="/counsel" element={<CounselPage />} />
-        <Route path="/guestbook" element={<GuestbookPage />} />
-        <Route path="/tribute" element={<TributePage />} />
-        <Route path="/wishlist" element={<TributePage />} />
-        <Route path="/cms" element={<CMSPage />} />
-        {/* Fallback: redirect unknown routes home */}
-        <Route path="*" element={<HomePage onReplayIntro={handleReplayIntro} />} />
-      </Routes>
+      {/* Dynamic Animated Page Routes */}
+      <AnimatePresence mode="wait">
+        <PageTransition key={location.pathname}>
+          <Routes location={location}>
+            <Route path="/" element={<HomePage onReplayIntro={handleReplayIntro} />} />
+            <Route path="/vault" element={<VaultPage />} />
+            <Route path="/counsel" element={<CounselPage />} />
+            <Route path="/guestbook" element={<GuestbookPage />} />
+            <Route path="/tribute" element={<TributePage />} />
+            <Route path="/wishlist" element={<TributePage />} />
+            <Route path="/cms" element={<CMSPage />} />
+            {/* Fallback: redirect unknown routes home */}
+            <Route path="*" element={<HomePage onReplayIntro={handleReplayIntro} />} />
+          </Routes>
+        </PageTransition>
+      </AnimatePresence>
 
       {/* Footer on all pages */}
       <SiteFooter onReplayIntro={handleReplayIntro} />
