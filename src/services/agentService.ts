@@ -19,6 +19,32 @@ function buildImageUrl(imageQuery: string, category: string): string {
   return `https://loremflickr.com/800/450/${encodeURIComponent(keywords)}`;
 }
 
+/**
+ * Safely parses a JSON object string from Gemini, handling markdown code fences,
+ * outer bracket extraction, and unescaped newlines/control characters inside strings.
+ */
+function safeParseJsonObject(rawText: string): any {
+  let clean = rawText.trim();
+  if (clean.includes('```')) {
+    clean = clean.replace(/```(?:json)?\s*/gi, '').replace(/```\s*$/gi, '').trim();
+  }
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    clean = clean.slice(start, end + 1);
+  }
+
+  try {
+    return JSON.parse(clean);
+  } catch {
+    // Escape unescaped control characters inside quoted string property values
+    const sanitized = clean.replace(/("(?:[^"\\]|\\.)*")/g, (match) => {
+      return match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+    });
+    return JSON.parse(sanitized);
+  }
+}
+
 export async function fetchCorpusEntries(): Promise<CorpusItem[]> {
   const client = getSupabaseClient() as any;
   if (!client) throw new Error('Database client not initialized');
@@ -287,24 +313,25 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          response_json_schema: {
-            type: 'object',
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
             properties: {
-              subtitle: { type: 'string' },
-              excerpt: { type: 'string' },
-              content: { type: 'string' },
-              doomRating: { type: 'number' },
-              doomVerdict: { type: 'string' },
-              seoTitle: { type: 'string' },
-              seoDescription: { type: 'string' },
-              imageQuery: { type: 'string' },
+              subtitle: { type: 'STRING' },
+              excerpt: { type: 'STRING' },
+              content: { type: 'STRING' },
+              doomRating: { type: 'NUMBER' },
+              doomVerdict: { type: 'STRING' },
+              seoTitle: { type: 'STRING' },
+              seoDescription: { type: 'STRING' },
+              imageQuery: { type: 'STRING' },
               faqs: {
-                type: 'array',
+                type: 'ARRAY',
                 items: {
-                  type: 'object',
+                  type: 'OBJECT',
                   properties: {
-                    question: { type: 'string' },
-                    answer: { type: 'string' }
+                    question: { type: 'STRING' },
+                    answer: { type: 'STRING' }
                   },
                   required: ['question', 'answer']
                 }
@@ -327,12 +354,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Empty response from Gemini');
 
-  let cleanText = text.trim();
-  if (cleanText.startsWith('```')) {
-    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
-  }
-
-  const draft = JSON.parse(cleanText);
+  const draft = safeParseJsonObject(text);
   const slug = item.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -493,24 +515,25 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          response_json_schema: {
-            type: 'object',
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
             properties: {
-              subtitle: { type: 'string' },
-              excerpt: { type: 'string' },
-              content: { type: 'string' },
-              doomRating: { type: 'number' },
-              doomVerdict: { type: 'string' },
-              seoTitle: { type: 'string' },
-              seoDescription: { type: 'string' },
-              imageQuery: { type: 'string' },
+              subtitle: { type: 'STRING' },
+              excerpt: { type: 'STRING' },
+              content: { type: 'STRING' },
+              doomRating: { type: 'NUMBER' },
+              doomVerdict: { type: 'STRING' },
+              seoTitle: { type: 'STRING' },
+              seoDescription: { type: 'STRING' },
+              imageQuery: { type: 'STRING' },
               faqs: {
-                type: 'array',
+                type: 'ARRAY',
                 items: {
-                  type: 'object',
+                  type: 'OBJECT',
                   properties: {
-                    question: { type: 'string' },
-                    answer: { type: 'string' }
+                    question: { type: 'STRING' },
+                    answer: { type: 'STRING' }
                   },
                   required: ['question', 'answer']
                 }
@@ -531,12 +554,7 @@ You MUST respond with a raw JSON object matching the following schema EXACTLY. D
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Empty response from Gemini');
 
-  let cleanText = text.trim();
-  if (cleanText.startsWith('```')) {
-    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
-  }
-
-  const draft = JSON.parse(cleanText);
+  const draft = safeParseJsonObject(text);
   const wordCount = (draft.content || '').split(/\s+/).length;
   const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
