@@ -90,7 +90,7 @@ export default function DoomCounsel() {
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         {/* Section Header */}
-        <div className="relative mb-12 bg-black border-4 border-black p-6 shadow-comic text-center skew-comic-l">
+        <div className="relative mb-12 bg-black/80 backdrop-blur-md border-4 border-black p-6 shadow-comic text-center skew-comic-l">
           <span className="absolute -top-4 left-6 bg-red-600 border-2 border-black text-white font-comic text-xs uppercase px-2 py-0.5 rotate-[-3deg] shadow-comic tracking-wide">
             STATE ADVISORY DECK
           </span>
@@ -106,7 +106,7 @@ export default function DoomCounsel() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Controls Panel (5 columns) */}
-          <div className="lg:col-span-5 bg-stone-900 border-4 border-black p-6 shadow-comic flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-stone-950/75 backdrop-blur-md border-4 border-black p-6 shadow-comic flex flex-col justify-between">
             <div>
               <h3 className="font-comic text-2xl text-white uppercase tracking-wider mb-4 border-b-2 border-black pb-2 flex items-center space-x-2">
                 <Shield className="w-5 h-5 text-emerald-500 fill-current" />
@@ -116,10 +116,10 @@ export default function DoomCounsel() {
               {/* Mood list */}
               <div className="space-y-2 mb-6">
                 {[
-                  { id: 'stern', label: 'Stern Ruler', desc: 'Sovereign dictates of absolute law.', color: 'bg-emerald-800' },
-                  { id: 'wrathful', label: 'Wrathful Sovereign', desc: 'Fury of Castle Doom directed at fools.', color: 'bg-red-700' },
-                  { id: 'triumphant', label: 'Triumphant God', desc: 'Exulting in victory over the cosmos.', color: 'bg-yellow-600' },
-                  { id: 'benevolent', label: 'Benevolent Father', desc: 'Merciful guidance for compliant subjects.', color: 'bg-stone-700' }
+                  { id: 'stern', label: 'Stern Ruler', desc: 'Sovereign dictates of absolute law.', color: 'bg-emerald-800/90' },
+                  { id: 'wrathful', label: 'Wrathful Sovereign', desc: 'Fury of Castle Doom directed at fools.', color: 'bg-red-700/90' },
+                  { id: 'triumphant', label: 'Triumphant God', desc: 'Exulting in victory over the cosmos.', color: 'bg-yellow-600/90' },
+                  { id: 'benevolent', label: 'Benevolent Father', desc: 'Merciful guidance for compliant subjects.', color: 'bg-stone-700/90' }
                 ].map((mood) => {
                   const isSelected = selectedMood === mood.id;
                   return (
@@ -129,7 +129,7 @@ export default function DoomCounsel() {
                       className={`w-full text-left p-3 border-2 border-black flex items-center justify-between transition-all cursor-pointer ${
                         isSelected
                           ? `${mood.color} text-white shadow-[2px_2px_0px_rgba(0,0,0,1)] translate-x-0.5 translate-y-0.5`
-                          : 'bg-stone-950 text-stone-400 hover:text-white hover:bg-stone-900'
+                          : 'bg-black/60 backdrop-blur-xs text-stone-300 hover:text-white hover:bg-black/80'
                       }`}
                     >
                       <div>
@@ -153,7 +153,7 @@ export default function DoomCounsel() {
                     placeholder="e.g. Is Elden Ring worth the pain?"
                     value={customQuestion}
                     onChange={(e) => setCustomQuestion(e.target.value)}
-                    className="w-full bg-stone-950 text-white font-mono text-xs border-2 border-black px-4 py-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-hidden focus:border-red-600 focus:shadow-none placeholder:text-stone-600 uppercase"
+                    className="w-full bg-black/80 backdrop-blur-xs text-white font-mono text-xs border-2 border-black px-4 py-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-hidden focus:border-red-600 focus:shadow-none placeholder:text-stone-500 uppercase"
                   />
                   <button
                     type="submit"
@@ -166,15 +166,15 @@ export default function DoomCounsel() {
               </form>
             </div>
 
-            <div className="mt-8 border-t border-stone-800 pt-4 text-[10px] font-mono text-stone-500 flex items-center justify-between">
+            <div className="mt-8 border-t border-stone-800 pt-4 text-[10px] font-mono text-stone-400 flex items-center justify-between">
               <span>LATVERIAN DIALECT PORT 80</span>
-              <span className="font-bold text-emerald-600">ONLINE</span>
+              <span className="font-bold text-emerald-400">ONLINE</span>
             </div>
           </div>
 
           {/* Response Console Box (7 columns) */}
-          <div className="lg:col-span-7 bg-stone-900 border-4 border-black p-5 shadow-comic flex flex-col justify-between relative min-h-[400px]">
-            <div className="absolute inset-0 halftone-green opacity-15 pointer-events-none" />
+          <div className="lg:col-span-7 bg-stone-950/75 backdrop-blur-md border-4 border-black p-5 shadow-comic flex flex-col justify-between relative min-h-[400px]">
+            <div className="absolute inset-0 halftone-green opacity-10 pointer-events-none" />
 
             <div className="relative z-10 flex-1 flex flex-col justify-between">
               
@@ -183,7 +183,7 @@ export default function DoomCounsel() {
                   <MessageSquare className="w-4 h-4 text-emerald-500" />
                   <span>THRONE RESPONSE FEED</span>
                 </span>
-                <span className="bg-black text-[9px] font-mono font-bold text-stone-400 px-2 py-0.5 border border-stone-800">
+                <span className="bg-black/90 text-[9px] font-mono font-bold text-stone-300 px-2 py-0.5 border border-stone-800">
                   REAL-TIME DICTATION
                 </span>
               </div>
@@ -196,15 +196,15 @@ export default function DoomCounsel() {
                       key={index}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="border border-stone-800 bg-stone-950 p-4 relative"
+                      className="border border-stone-800/80 bg-black/75 backdrop-blur-sm p-4 relative"
                     >
-                      <div className="flex items-center justify-between text-xs font-mono text-stone-300 mb-2 border-b border-stone-900 pb-1">
-                        <span className="text-red-500 uppercase font-bold">SUBJECT ASKED: "{log.query}"</span>
-                        <span className="bg-emerald-950 text-emerald-500 px-1 rounded-sm uppercase font-bold">{log.mood}</span>
+                      <div className="flex items-center justify-between text-xs font-mono text-stone-300 mb-2 border-b border-stone-800/80 pb-1">
+                        <span className="text-red-400 uppercase font-bold">SUBJECT ASKED: "{log.query}"</span>
+                        <span className="bg-emerald-950/90 text-emerald-400 px-1 rounded-sm uppercase font-bold">{log.mood}</span>
                       </div>
                       
                       {/* Comic style speech bubble representation */}
-                      <div className="bg-stone-900 text-stone-100 p-3 border-l-4 border-emerald-500 font-sans text-xs sm:text-sm font-semibold leading-relaxed relative italic">
+                      <div className="bg-black/60 text-stone-100 p-3 border-l-4 border-emerald-500 font-sans text-xs sm:text-sm font-semibold leading-relaxed relative italic">
                         "{log.answer}"
                       </div>
                     </motion.div>
