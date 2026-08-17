@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom';
 
 interface PageTransitionProps {
   children: React.ReactNode;
-  key?: string;
 }
 
 export default function PageTransition({ children }: PageTransitionProps) {
@@ -14,11 +13,10 @@ export default function PageTransition({ children }: PageTransitionProps) {
     <div className="relative w-full min-h-screen overflow-hidden">
       {/* Dynamic Glitch Wipe Curtain Overlay during transition */}
       <motion.div
-        key={`glitch-wipe-${location.pathname}`}
         initial={{ scaleY: 1 }}
         animate={{ scaleY: 0 }}
         exit={{ scaleY: 1 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{ originY: 0 }}
         className="fixed inset-0 z-50 bg-stone-950 border-b-4 border-emerald-500 pointer-events-none flex flex-col items-center justify-center overflow-hidden"
       >
@@ -32,11 +30,10 @@ export default function PageTransition({ children }: PageTransitionProps) {
 
       {/* Main Page Motion Container */}
       <motion.div
-        key={location.pathname}
         initial={{ opacity: 0, y: 15, filter: 'blur(4px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ opacity: 0, y: -15, filter: 'blur(4px)' }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         className="w-full min-h-screen"
       >
         {children}
@@ -44,3 +41,4 @@ export default function PageTransition({ children }: PageTransitionProps) {
     </div>
   );
 }
+

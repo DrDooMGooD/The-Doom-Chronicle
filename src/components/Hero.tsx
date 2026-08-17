@@ -43,7 +43,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen pt-24 pb-16 flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 bg-stone-950 border-b-8 border-black"
+      className="relative min-h-screen pt-24 pb-16 flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8 bg-stone-950/40 border-b-8 border-black"
     >
       {/* Super Doom Video Backdrop Layer */}
       <video
@@ -69,7 +69,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10">
         
         {/* Left Side: Comic-Book Cover / Big Title Block (7 Columns) */}
-        <div className="lg:col-span-7 flex flex-col justify-between bg-stone-950 border-4 border-black p-6 sm:p-8 shadow-comic-lg relative transition-all duration-300 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+        <div className="lg:col-span-7 flex flex-col justify-between bg-stone-950/75 backdrop-blur-md border-4 border-black p-6 sm:p-8 shadow-comic-lg relative transition-all duration-300 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
           
           {/* Cover Header Banner */}
           <div className="flex items-center justify-between border-b-4 border-black pb-4 mb-6">
@@ -139,7 +139,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
         </div>
 
         {/* Right Side: Doom Graphic Panel & Comic Dialogue (5 Columns) */}
-        <div className="lg:col-span-5 flex flex-col justify-center items-center bg-stone-900 border-4 border-black p-6 shadow-comic relative min-h-[400px] gap-6">
+        <div className="lg:col-span-5 flex flex-col justify-center items-center bg-stone-950/75 backdrop-blur-md border-4 border-black p-6 shadow-comic relative min-h-[400px] gap-6">
           
           {/* Comic halftone background purely for the Doom graphic panel */}
           <div className="absolute inset-0 halftone-green opacity-40 pointer-events-none" />
@@ -157,7 +157,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
           )}
 
           {/* Dr. Doom Speech bubble */}
-          <div className="bg-white text-black p-5 border-4 border-black shadow-comic relative rounded-sm z-10 skew-comic-r w-full">
+          <div className="bg-white/90 backdrop-blur-md text-black p-5 border-4 border-black shadow-comic relative rounded-sm z-10 skew-comic-r w-full">
             <Quote className="absolute -top-3 -left-3 w-6 h-6 text-emerald-700 bg-white border-2 border-black rounded-full p-1" />
             <h4 className="font-comic text-xl text-emerald-800 uppercase tracking-wide mb-1 flex items-center space-x-1.5">
               <span>LORD DOOM SPEAKS:</span>

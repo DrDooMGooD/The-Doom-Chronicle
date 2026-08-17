@@ -73,14 +73,14 @@ export default function HomePortals() {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-stone-950 border-t-8 border-black py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <section className="bg-stone-950/60 border-t-8 border-black py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Halftone atmosphere */}
       <div className="absolute inset-0 halftone-bg opacity-[0.025] pointer-events-none" />
 
       {/* Section header */}
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="mb-12 text-center">
-          <span className="inline-block font-mono text-sm font-bold text-rose-500 uppercase tracking-[0.3em] bg-black px-4 py-1.5 border border-rose-500/40 mb-4">
+          <span className="inline-block font-mono text-sm font-bold text-rose-500 uppercase tracking-[0.3em] bg-black/80 backdrop-blur-md px-4 py-1.5 border border-rose-500/40 mb-4">
             LATVERIAN SOVEREIGN ARCHIVES — CLASSIFIED: OPEN ACCESS
           </span>
           <h2 className="font-comic text-5xl sm:text-6xl uppercase text-white text-shadow-doom tracking-wider">
@@ -99,7 +99,7 @@ export default function HomePortals() {
               viewport={{ once: true, margin: '-60px' }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
               onClick={() => navigate(portal.route)}
-              className={`relative bg-stone-900 border-r-4 last:border-r-0 border-black cursor-pointer group
+              className={`relative bg-stone-950/75 backdrop-blur-md border-r-4 last:border-r-0 border-black cursor-pointer group
                 transition-all duration-200 ${portal.hoverShadow}
                 hover:-translate-y-1 hover:z-10`}
             >
