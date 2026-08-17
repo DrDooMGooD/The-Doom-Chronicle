@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 interface PageTransitionProps {
   children: React.ReactNode;
+  key?: string;
 }
 
 export default function PageTransition({ children }: PageTransitionProps) {

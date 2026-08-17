@@ -107,7 +107,9 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
 
   // Sovereign keys settings state
   const [showSettings, setShowSettings] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini-api-key') || '');
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini-api-key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '');
+
+  const getEffectiveGeminiKey = () => geminiApiKey || localStorage.getItem('gemini-api-key') || (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
 
   // Tab strip scroll ref
   const tabsScrollRef = useRef<HTMLDivElement>(null);
@@ -204,6 +206,82 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     }
   };
 
+  const handleEdit = (article: Article) => {
+    setEditingArticle(article);
+    setFormTitle(article.title);
+    setFormCategory(article.category);
+    setFormSubtitle(article.subtitle || '');
+    setFormExcerpt(article.excerpt || '');
+    setFormContent(article.content || '');
+    setFormImageUrl(article.imageUrl || '');
+    setFormDoomRating(article.doomRating || 5);
+    setFormDoomVerdict(article.doomVerdict || '');
+    setFormStatus(article.status || 'published');
+    setFormAuthorName(article.authorName || 'Dr. Doom');
+    setFormGeoRegion(article.geoRegion || 'Latveria');
+    setFormSeoTitle(article.seoTitle || '');
+    setFormSeoDescription(article.seoDescription || '');
+    setFormFaqs(article.faqs || []);
+    setIsFormOpen(true);
+  };
+
+  const handleCreateNew = () => {
+    setEditingArticle(null);
+    setFormTitle('');
+    setFormCategory('game');
+    setFormSubtitle('');
+    setFormExcerpt('');
+    setFormContent('');
+    setFormImageUrl('');
+    setFormDoomRating(5);
+    setFormDoomVerdict('SOVEREIGN APPROVED');
+    setFormStatus('pending_review');
+    setFormAuthorName('Dr. Doom');
+    setFormGeoRegion('Latveria');
+    setFormSeoTitle('');
+    setFormSeoDescription('');
+    setFormFaqs([]);
+    setIsFormOpen(true);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formTitle.trim()) {
+      alert('Title is required');
+      return;
+    }
+
+    try {
+      const payload: Partial<Article> = {
+        title: formTitle,
+        category: formCategory,
+        subtitle: formSubtitle,
+        excerpt: formExcerpt,
+        content: formContent,
+        imageUrl: formImageUrl || 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=600&auto=format&fit=crop',
+        doomRating: Number(formDoomRating),
+        doomVerdict: formDoomVerdict,
+        status: formStatus,
+        authorName: formAuthorName,
+        geoRegion: formGeoRegion,
+        seoTitle: formSeoTitle,
+        seoDescription: formSeoDescription,
+        faqs: formFaqs,
+      };
+
+      if (editingArticle) {
+        await updateArticle(editingArticle.id, payload);
+      } else {
+        await createArticle(payload);
+      }
+
+      setIsFormOpen(false);
+      await reloadArticles();
+    } catch (err: any) {
+      alert(`Save failed: ${err.message}`);
+    }
+  };
+
   const handleSendReply = async (id: string) => {
     const replyText = replyTexts[id] || '';
     if (!replyText.trim()) return;
@@ -251,22 +329,18 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
     }
   };
 
-  const handleDeleteCorpusItem = async (id: string) => {
-    if (!window.confirm('Incinerate this corpus topic? This cannot be undone.')) return;
+  const handleCorpusDelete = async (id: string) => {
+    if (!window.confirm('Incinerate this backlog concept from the strategy corpus?')) return;
     try {
       await deleteCorpusItem(id);
-      setCorpusEntries(prev => prev.filter(c => c.id !== id));
+      await reloadCorpus();
     } catch (err: any) {
-      alert(`Failed to purge topic: ${err.message}`);
+      alert(`Delete failed: ${err.message}`);
     }
   };
 
-  const handleClearCorpus = async (mode: 'backlog' | 'published' | 'all') => {
-    const labels = {
-      backlog: 'all BACKLOG items',
-      published: 'all BACKLOG + PUBLISHED items',
-      all: 'ALL topics (except in-progress jobs)'
-    };
+  const handleCorpusPurge = async (mode: 'backlog' | 'published' | 'all') => {
+    const labels = { backlog: 'backlog items', published: 'published links', all: 'all entries' };
     if (!window.confirm(`This will permanently incinerate ${labels[mode]} from the strategy corpus. Proceed?`)) return;
     try {
       const count = await clearCorpusBacklog(mode);
@@ -278,7 +352,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   };
 
   const handleLucyBrainstorm = async (queryOverride?: string) => {
-    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    const key = getEffectiveGeminiKey();
     if (!key) {
       alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
       return;
@@ -303,7 +377,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
 
   const handleArthurRewrite = async () => {
     if (!rewriteTarget || !rewriteInstructions.trim()) return;
-    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    const key = getEffectiveGeminiKey();
     if (!key) {
       alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
       return;
@@ -356,7 +430,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
   };
 
   const handleArthurPublish = async (item: CorpusItem) => {
-    const key = geminiApiKey || localStorage.getItem('gemini-api-key') || '';
+    const key = getEffectiveGeminiKey();
     if (!key) {
       alert('GEMINI API KEY IS REQUIRED. Click "Sovereign Keys" in the top bar to configure it.');
       return;
@@ -905,7 +979,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                           <button
                             type="button"
                             title="Incinerate all backlog-status topics"
-                            onClick={() => handleClearCorpus('backlog')}
+                            onClick={() => handleCorpusPurge('backlog')}
                             className="bg-stone-900 hover:bg-red-900 border border-stone-700 hover:border-red-700 text-stone-400 hover:text-red-300 font-bold text-[10px] uppercase px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5 shrink-0" />
@@ -914,7 +988,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                           <button
                             type="button"
                             title="Incinerate all backlog + published topics"
-                            onClick={() => handleClearCorpus('all')}
+                            onClick={() => handleCorpusPurge('all')}
                             className="bg-stone-900 hover:bg-red-900 border border-stone-700 hover:border-red-700 text-stone-400 hover:text-red-300 font-bold text-[10px] uppercase px-2.5 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5 shrink-0" />
@@ -1163,7 +1237,7 @@ export default function CMSDashboard({ onClose }: CMSDashboardProps) {
                                   <button
                                     type="button"
                                     title="Incinerate this topic"
-                                    onClick={() => handleDeleteCorpusItem(item.id)}
+                                    onClick={() => handleCorpusDelete(item.id)}
                                     className="bg-stone-900 hover:bg-red-900 border border-stone-800 hover:border-red-700 text-stone-500 hover:text-red-400 font-bold text-[10px] uppercase px-2 py-1.5 flex items-center space-x-1 transition-colors cursor-pointer"
                                   >
                                     <Trash2 className="w-3.5 h-3.5 shrink-0" />

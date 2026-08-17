@@ -220,17 +220,19 @@ export default function App() {
 
       {/* Dynamic Animated Page Routes */}
       <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><HomePage onReplayIntro={handleReplayIntro} /></PageTransition>} />
-          <Route path="/vault" element={<PageTransition><VaultPage /></PageTransition>} />
-          <Route path="/counsel" element={<PageTransition><CounselPage /></PageTransition>} />
-          <Route path="/guestbook" element={<PageTransition><GuestbookPage /></PageTransition>} />
-          <Route path="/tribute" element={<PageTransition><TributePage /></PageTransition>} />
-          <Route path="/wishlist" element={<PageTransition><TributePage /></PageTransition>} />
-          <Route path="/cms" element={<PageTransition><CMSPage /></PageTransition>} />
-          {/* Fallback: redirect unknown routes home */}
-          <Route path="*" element={<PageTransition><HomePage onReplayIntro={handleReplayIntro} /></PageTransition>} />
-        </Routes>
+        <PageTransition key={location.pathname}>
+          <Routes location={location}>
+            <Route path="/" element={<HomePage onReplayIntro={handleReplayIntro} />} />
+            <Route path="/vault" element={<VaultPage />} />
+            <Route path="/counsel" element={<CounselPage />} />
+            <Route path="/guestbook" element={<GuestbookPage />} />
+            <Route path="/tribute" element={<TributePage />} />
+            <Route path="/wishlist" element={<TributePage />} />
+            <Route path="/cms" element={<CMSPage />} />
+            {/* Fallback: redirect unknown routes home */}
+            <Route path="*" element={<HomePage onReplayIntro={handleReplayIntro} />} />
+          </Routes>
+        </PageTransition>
       </AnimatePresence>
 
       {/* Footer on all pages */}
